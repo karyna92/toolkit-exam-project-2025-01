@@ -1,0 +1,30 @@
+{
+  "development": {
+    "username": "postgres",
+    "password": "password",
+    "database": "squad-help-dev",
+    "host": "localhost",
+    "port": 12346,
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "admin",
+    "database": "squad-help-test",
+    "host": "localhost",
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "admin",
+    "database": "squad-help-prod",
+    "host": "localhost",
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  }
+}

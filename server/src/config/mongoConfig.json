@@ -1,0 +1,12 @@
+{
+  "development": {
+    "database": "squad-help-chat",
+    "host": "localhost",
+    "port": 12345
+  },
+  "production": {
+    "database": "squad-help-chat-prod",
+    "host": "localhost",
+    "port": 27017
+  }
+}
