@@ -30,4 +30,10 @@ function parseStack(stack) {
   return { frames };
 }
 
-module.exports = { normalizeError, parseStack };
+function getArchiveFileName() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return `backup-${timestamp}.json`;
+}
+
+
+module.exports = { normalizeError, parseStack, getArchiveFileName };
