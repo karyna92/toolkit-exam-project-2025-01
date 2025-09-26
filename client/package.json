@@ -32,6 +32,7 @@
     "react-toastify": "^9.1.1",
     "redux": "^4.2.0",
     "require-context": "^1.1.0",
+    "sass-loader": "^16.0.5",
     "socket.io-client": "^4.5.4",
     "vite": "^5.3.1",
     "vite-tsconfig-paths": "^4.3.2",
@@ -58,6 +59,6 @@
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-react-app": "^7.0.1",
     "prettier-standard": "^16.4.1",
-    "sass": "^1.56.1"
+    "sass": "^1.93.2"
   }
 }

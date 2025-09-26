@@ -9,6 +9,7 @@ import Payment from './pages/Payment/Payment';
 import StartContestPage from './pages/StartContestPage/StartContestPage';
 import Dashboard from './pages/Dashboard/Dashboard';
 import NotFound from './components/NotFound/NotFound';
+import HowItWorks from './pages/HowItWorksPage/HowItWorks'
 import Home from './pages/Home/Home';
 import ContestPage from './pages/ContestPage/ContestPage';
 import UserProfile from './pages/UserProfile/UserProfile';
@@ -39,6 +40,7 @@ class App extends Component {
         <Routes>
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="/information" element={<HowItWorks />} />
 
             <Route element={<OnlyNotAuthorizedUserRoute />}>
               <Route path="/login" element={<LoginPage />} />

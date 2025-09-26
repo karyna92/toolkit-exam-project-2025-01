@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Header from '../../components/Header/Header';
 import Footer from '../../components/Footer/Footer';
 import RegistrationFooter from '../../components/Layout/RegistrationFooter';
@@ -8,7 +8,7 @@ import styles from './Layout.module.sass';
 
 const Layout = (props) => {
   const { pathname } = useLocation();
-
+  const navigate = useNavigate();
   const isRegisterPathname = pathname === '/registration';
   const isAuthPathname = pathname === '/login' || isRegisterPathname;
 
@@ -19,7 +19,7 @@ const Layout = (props) => {
       <div className={styles.content}>
         <Outlet />
       </div>
-      {!isAuthPathname && <Footer />}
+      {!isAuthPathname && <Footer navigate={navigate}/>}
       {isRegisterPathname && <RegistrationFooter />}
     </div>
   );
