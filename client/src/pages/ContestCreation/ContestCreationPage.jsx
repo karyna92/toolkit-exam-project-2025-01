@@ -46,14 +46,12 @@ const ContestCreationPage = (props) => {
         <ProgressBar currentStep={2} />
       </div>
       <div className={styles.container}>
-        <div className={styles.formContainer}>
           <ContestForm
             contestType={props.contestType}
             handleSubmit={handleSubmit}
             formRef={formRef}
             defaultData={contestData}
           />
-        </div>
       </div>
       <div className={styles.footerButtonsContainer}>
         <div className={styles.lastContainer}>

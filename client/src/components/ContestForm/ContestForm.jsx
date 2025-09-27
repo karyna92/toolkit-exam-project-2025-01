@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { getDataForContest } from '../../store/slices/dataForContestSlice';
 import withRouter from '../../hocs/withRouter';
 import Spinner from '../Spinner/Spinner';
+import ButtonGroup from '../ButtonGroup/ButtonGroup'
 import FormInput from '../FormInput/FormInput';
 import SelectInput from '../SelectInput/SelectInput';
 import FieldFileInput from '../InputComponents/FieldFileInput/FieldFileInput';
@@ -50,7 +51,6 @@ class ContestForm extends React.Component {
       }
     }
   };
-
   componentDidMount() {
     this.getPreference();
   }
@@ -62,6 +62,7 @@ class ContestForm extends React.Component {
   }
 
   render() {
+
     const { isFetching, error } = this.props.dataForContest;
     if (error) {
       return <TryAgain getData={this.getPreference} />;
@@ -79,6 +80,7 @@ class ContestForm extends React.Component {
               focusOfWork: '',
               targetCustomer: '',
               file: '',
+              domainOption: 0,
               ...variableOptions[this.props.contestType],
               ...this.props.initialValues,
             }}
@@ -87,7 +89,7 @@ class ContestForm extends React.Component {
             innerRef={this.props.formRef}
             enableReinitialize
           >
-            <Form>
+             {({ values, setFieldValue }) => (<Form>
               <div className={styles.inputContainer}>
                 <span className={styles.inputHeader}>Title of contest</span>
                 <FormInput
@@ -145,6 +147,12 @@ class ContestForm extends React.Component {
                 />
               </div>
               <OptionalSelects {...this.props} />
+              {this.props.contestType?.trim() === CONSTANTS.NAME_CONTEST && (
+                <ButtonGroup
+                  selected={values.domainOption}
+                  onChange={(val) => setFieldValue('domainOption', val)}
+                />
+              )}
               <FieldFileInput
                 name="file"
                 classes={{
@@ -162,6 +170,7 @@ class ContestForm extends React.Component {
                 </button>
               ) : null}
             </Form>
+            )}
           </Formik>
         </div>
       </>
