@@ -38,7 +38,6 @@ export const updateUser = createAsyncThunk(
       console.log('update User Data', payload);
       const { data } = await restController.updateUser(payload);
       dispatch(changeEditModeOnUserProfile(false));
-      console.log('already updated User', data);
       return data;
     } catch (err) {
       return rejectWithValue({

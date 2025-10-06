@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+  <title>Rubbish Bin Icon</title>
+  <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Lid -->
+    <path d="M3 6h18" />
+    <path d="M9 3h6a1 1 0 0 1 1 1v1H8V4a1 1 0 0 1 1-1z" />
+    <!-- Body -->
+    <path d="M5 6l1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14" />
+    <!-- Handles / details -->
+    <path d="M10 11v5" />
+    <path d="M14 11v5" />
+    <!-- Small top handle -->
+    <path d="M8.5 4.5h7" />
+  </g>
+</svg>

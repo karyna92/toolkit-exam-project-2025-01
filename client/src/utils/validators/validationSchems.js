@@ -213,4 +213,9 @@ export default {
       )
       .required('required'),
   }),
+  EventFormSchema: yup.object({
+    name: yup.string().required('Name is required'),
+    date: yup.string().required('Date is required'),
+    time: yup.string().required('Time is required'),
+  }),
 };

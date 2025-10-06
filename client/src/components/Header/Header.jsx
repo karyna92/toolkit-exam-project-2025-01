@@ -13,7 +13,6 @@ class Header extends React.Component {
       this.props.getUser();
     }
   }
-
   logOut = () => {
     localStorage.clear();
     this.props.clearUserStore();
@@ -42,6 +41,10 @@ class Header extends React.Component {
               src={`${CONSTANTS.STATIC_IMAGES_PATH}menu-down.png`}
               alt="menu"
             />
+            {this.props.ongoingEvents.length > 0 &&
+              !this.props.hasSeenOngoingEvents && (
+                <div className={styles.notificationDot}></div>
+              )}
             <ul>
               <li>
                 <Link to="/dashboard" style={{ textDecoration: 'none' }}>
@@ -61,6 +64,18 @@ class Header extends React.Component {
                   <span>Messages</span>
                 </Link>
               </li>
+              {this.props.data?.role === 'customer' && (
+                <li>
+                  <Link to="/events" style={{ textDecoration: 'none' }}>
+                    <div className={styles.events}>
+                      <span>Events</span>
+                      {this.props.ongoingEvents.length > 0 && (
+                        <p>{this.props.ongoingEvents.length}</p>
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              )}
               <li>
                 <Link
                   to="http:/www.google.com"
@@ -276,7 +291,13 @@ class Header extends React.Component {
   }
 }
 
-const mapStateToProps = (state) => state.userStore;
+const mapStateToProps = (state) => ({
+  data: state.userStore.data,
+  isFetching: state.userStore.isFetching,
+  ongoingEvents: state.events?.ongoingEvents || [],
+  hasSeenOngoingEvents: state.events.hasSeenOngoingEvents,
+});
+
 const mapDispatchToProps = (dispatch) => ({
   getUser: () => dispatch(getUser()),
   clearUserStore: () => dispatch(clearUserStore()),

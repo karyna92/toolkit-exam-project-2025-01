@@ -13,6 +13,7 @@ import HowItWorks from './pages/HowItWorksPage/HowItWorks'
 import Home from './pages/Home/Home';
 import ContestPage from './pages/ContestPage/ContestPage';
 import UserProfile from './pages/UserProfile/UserProfile';
+import Events from './pages/Events/Events';
 import 'react-toastify/dist/ReactToastify.css';
 import ContestCreationPage from './pages/ContestCreation/ContestCreationPage';
 import CONSTANTS from './constants';
@@ -59,6 +60,7 @@ class App extends Component {
                   />
                 }
               />
+              <Route path='/events' element={<Events/>}/>
               <Route
                 path="/startContest/taglineContest"
                 element={

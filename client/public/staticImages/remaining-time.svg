@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-labelledby="titleDesc">
+  <title id="titleDesc">Remaining time</title>
+
+  <!-- outer ring (background) -->
+  <circle cx="24" cy="24" r="18" fill="none" stroke="currentColor" stroke-opacity="0.12" stroke-width="4"/>
+
+  <!-- progress ring -->
+  <circle
+    id="progressRing"
+    cx="24"
+    cy="24"
+    r="18"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    transform="rotate(-90 24 24)"
+    stroke-dasharray="113.097"
+    stroke-dashoffset="28.274"
+  />
+
+  <!-- clock face -->
+  <circle cx="24" cy="24" r="6" fill="currentColor" fill-opacity="0.06" />
+  <rect x="23.2" y="14" width="1.6" height="10" rx="0.8" fill="currentColor" transform="rotate(30 24 24)"/>
+  <rect x="23.6" y="9" width="0.8" height="15" rx="0.4" fill="currentColor" transform="rotate(110 24 24)"/>
+</svg>
