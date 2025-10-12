@@ -2,32 +2,29 @@ import React from 'react';
 import { Field, ErrorMessage } from 'formik';
 import classNames from 'classnames';
 
-const FormInput = ({ classes, label, name, ...rest }) => (
+const FormInput = ({ classes, label, name, showError = true, ...rest }) => (
   <Field name={name}>
-    {(props) => {
-      const {
-        field,
-        meta: { touched, error },
-      } = props;
-
+    {({ field, meta: { touched, error } }) => {
       const inputClassName = classNames(classes.input, {
         [classes.notValid]: touched && error,
         [classes.valid]: touched && !error,
       });
+
       return (
         <div className={classes.container}>
           <input
-            type="text"
             {...field}
+            {...rest}
             placeholder={label}
             className={inputClassName}
-            {...rest}
           />
-          <ErrorMessage
-            name={name}
-            component="span"
-            className={classes.warning}
-          />
+          {showError && (
+            <ErrorMessage
+              name={name}
+              component="span"
+              className={classes.warning}
+            />
+          )}
         </div>
       );
     }}

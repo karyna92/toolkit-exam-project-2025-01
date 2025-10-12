@@ -12,6 +12,7 @@ import chatReducer from './slices/chatSlice';
 import userProfileReducer from './slices/userProfileSlice';
 import eventsReducer from './slices/eventsSlice'
 
+
 const rootReducer = combineReducers({
   userStore: userReducer,
   auth: authReducer,

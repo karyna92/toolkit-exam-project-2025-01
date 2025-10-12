@@ -1,4 +1,4 @@
-const db = require('../models/postgresModels');
+const db = require('../models');
 const { ServerError, NotFoundError, BadRequestError } = require('../errors');
 const contestQueries = require('../queries/contestQueries');
 const controller = require('../sockets/socketInit');

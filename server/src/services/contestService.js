@@ -1,4 +1,4 @@
-const db = require('../models/postgresModels');
+const db = require('../models');
 const contestQueries = require('../queries/contestQueries');
 const userQueries = require('../queries/userQueries');
 const controller = require('../sockets/socketInit');

@@ -27,6 +27,7 @@ const initialState = {
   isRenameCatalog: false,
   isShowChatsInCatalog: false,
   catalogCreationMode: CONSTANTS.ADD_CHAT_TO_OLD_CATALOG,
+  optimisticStatus: {},
 };
 
 //---------- getPreviewChat
@@ -86,24 +87,30 @@ const sendMessageExtraReducers = createExtraReducers({
   fulfilledReducer: (state, { payload }) => {
     const { messagesPreview } = state;
     let isNew = true;
+
     messagesPreview.forEach((preview) => {
       if (isEqual(preview.participants, payload.message.participants)) {
         preview.text = payload.message.body;
         preview.sender = payload.message.sender;
-        preview.createAt = payload.message.createdAt;
+        preview.createdAt = payload.message.createdAt;
         isNew = false;
       }
     });
+
     if (isNew) {
-      messagesPreview.push(payload.preview);
+      const existingPreview = messagesPreview.find((p) =>
+        isEqual(p.participants, payload.preview.participants)
+      );
+
+      if (existingPreview) {
+        existingPreview.text = payload.preview.text;
+        existingPreview.sender = payload.preview.sender;
+        existingPreview.createdAt = payload.preview.createdAt;
+      } else {
+        messagesPreview.push(payload.preview);
+      }
     }
-    const chatData = {
-      _id: payload.preview._id,
-      participants: payload.preview.participants,
-      favoriteList: payload.preview.favoriteList,
-      blackList: payload.preview.blackList,
-    };
-    state.chatData = { ...state.chatData, ...chatData };
+
     state.messagesPreview = messagesPreview;
     state.messages = [...state.messages, payload.message];
   },
@@ -123,16 +130,50 @@ export const changeChatFavorite = decorateAsyncThunk({
 
 const changeChatFavoriteExtraReducers = createExtraReducers({
   thunk: changeChatFavorite,
-  fulfilledReducer: (state, { payload }) => {
-    const { messagesPreview } = state;
-    messagesPreview.forEach((preview) => {
-      if (isEqual(preview.participants, payload.participants))
-        preview.favoriteList = payload.favoriteList;
-    });
-    state.chatData = payload;
-    state.messagesPreview = messagesPreview;
+  pendingReducer: (state, { meta }) => {
+    const { favoriteFlag, userId, conversationId } = meta.arg;
+    if (conversationId) {
+      state.optimisticStatus[conversationId] = {
+        ...state.optimisticStatus[conversationId],
+        favoriteList: favoriteFlag,
+        userId: userId,
+      };
+    }
   },
-  rejectedReducer: (state, { payload }) => {
+  fulfilledReducer: (state, { payload }) => {
+    const { participants, favoriteList, blackList, id } = payload;
+
+    state.messagesPreview = state.messagesPreview.map((preview) =>
+      JSON.stringify(preview.participants) === JSON.stringify(participants)
+        ? { ...preview, favoriteList, blackList }
+        : preview
+    );
+
+    if (state.chatData && state.chatData.id === id) {
+      state.chatData = {
+        ...state.chatData,
+        favoriteList,
+        blackList,
+      };
+    }
+
+    if (state.optimisticStatus[id]) {
+      delete state.optimisticStatus[id].favoriteList;
+      if (Object.keys(state.optimisticStatus[id]).length === 1) {
+        delete state.optimisticStatus[id];
+      }
+    }
+  },
+  rejectedReducer: (state, { payload, meta }) => {
+    const { conversationId } = meta.arg;
+
+    if (state.optimisticStatus[conversationId]) {
+      delete state.optimisticStatus[conversationId].favoriteList;
+      if (Object.keys(state.optimisticStatus[conversationId]).length === 1) {
+        delete state.optimisticStatus[conversationId];
+      }
+    }
+
     state.error = payload;
   },
 });
@@ -148,16 +189,51 @@ export const changeChatBlock = decorateAsyncThunk({
 
 const changeChatBlockExtraReducers = createExtraReducers({
   thunk: changeChatBlock,
-  fulfilledReducer: (state, { payload }) => {
-    const { messagesPreview } = state;
-    messagesPreview.forEach((preview) => {
-      if (isEqual(preview.participants, payload.participants))
-        preview.blackList = payload.blackList;
-    });
-    state.chatData = payload;
-    state.messagesPreview = messagesPreview;
+  pendingReducer: (state, { meta }) => {
+    const { blackListFlag, userId, conversationId } = meta.arg;
+
+    if (conversationId) {
+      state.optimisticStatus[conversationId] = {
+        ...state.optimisticStatus[conversationId],
+        blackList: blackListFlag,
+        userId: userId,
+      };
+    }
   },
-  rejectedReducer: (state, { payload }) => {
+  fulfilledReducer: (state, { payload }) => {
+    const { participants, favoriteList, blackList, id } = payload;
+
+    state.messagesPreview = state.messagesPreview.map((preview) =>
+      JSON.stringify(preview.participants) === JSON.stringify(participants)
+        ? { ...preview, favoriteList, blackList }
+        : preview
+    );
+
+    if (state.chatData && state.chatData.id === id) {
+      state.chatData = {
+        ...state.chatData,
+        favoriteList,
+        blackList,
+      };
+    }
+
+    if (state.optimisticStatus[id]) {
+      delete state.optimisticStatus[id].blackList;
+      if (Object.keys(state.optimisticStatus[id]).length === 1) {
+        delete state.optimisticStatus[id];
+      }
+    }
+  },
+  rejectedReducer: (state, { payload, meta }) => {
+    const { conversationId } = meta.arg;
+
+    if (state.optimisticStatus[conversationId]) {
+      delete state.optimisticStatus[conversationId].blackList;
+      if (Object.keys(state.optimisticStatus[conversationId]).length === 1) {
+        delete state.optimisticStatus[conversationId];
+      }
+    }
+
     state.error = payload;
   },
 });
@@ -194,7 +270,7 @@ const addChatToCatalogExtraReducers = createExtraReducers({
   fulfilledReducer: (state, { payload }) => {
     const { catalogList } = state;
     for (let i = 0; i < catalogList.length; i++) {
-      if (catalogList[i]._id === payload._id) {
+      if (catalogList[i].id === payload.id) {
         catalogList[i].chats = payload.chats;
         break;
       }
@@ -244,7 +320,7 @@ const deleteCatalogExtraReducers = createExtraReducers({
     const { catalogList } = state;
     const newCatalogList = remove(
       catalogList,
-      (catalog) => payload.catalogId !== catalog._id
+      (catalog) => payload.catalogId !== catalog.id
     );
     state.catalogList = [...newCatalogList];
   },
@@ -267,19 +343,20 @@ const removeChatFromCatalogExtraReducers = createExtraReducers({
   fulfilledReducer: (state, { payload }) => {
     const { catalogList } = state;
     for (let i = 0; i < catalogList.length; i++) {
-      if (catalogList[i]._id === payload._id) {
+      if (catalogList[i].id === payload.id) {
         catalogList[i].chats = payload.chats;
         break;
       }
     }
-    state.currentCatalog = payload;
     state.catalogList = [...catalogList];
-  },
-  rejectedReducer: (state, { payload }) => {
-    state.error = payload;
+    if (state.currentCatalog && state.currentCatalog.id === payload.id) {
+      state.currentCatalog = {
+        ...state.currentCatalog,
+        chats: payload.chats,
+      };
+    }
   },
 });
-
 //---------- changeCatalogName
 export const changeCatalogName = decorateAsyncThunk({
   key: `${CHAT_SLICE_NAME}/changeCatalogName`,
@@ -294,12 +371,15 @@ const changeCatalogNameExtraReducers = createExtraReducers({
   fulfilledReducer: (state, { payload }) => {
     const { catalogList } = state;
     for (let i = 0; i < catalogList.length; i++) {
-      if (catalogList[i]._id === payload._id) {
+      if (catalogList[i].id === payload.id) {
         catalogList[i].catalogName = payload.catalogName;
         break;
       }
     }
-    state.catalogList = [...catalogList];
+    state.currentCatalog = {
+      ...state.currentCatalog,
+      ...payload,
+    };
     state.currentCatalog = payload;
     state.isRenameCatalog = false;
   },
@@ -319,24 +399,28 @@ const reducers = {
     state.chatData = payload;
     state.messagesPreview = messagesPreview;
   },
-
   addMessage: (state, { payload }) => {
     const { message, preview } = payload;
     const { messagesPreview } = state;
-    let isNew = true;
-    messagesPreview.forEach((preview) => {
-      if (isEqual(preview.participants, message.participants)) {
-        preview.text = message.body;
-        preview.sender = message.sender;
-        preview.createAt = message.createdAt;
-        isNew = false;
-      }
-    });
-    if (isNew) {
+    const existingIndex = messagesPreview.findIndex((p) => p.id === preview.id);
+
+    if (existingIndex !== -1) {
+      messagesPreview[existingIndex] = {
+        ...messagesPreview[existingIndex],
+        text: message.body,
+        sender: message.sender,
+        createdAt: message.createdAt,
+      };
+    } else {
+      console.log('⚠️ No existing preview found — adding new one');
       messagesPreview.push(preview);
     }
+    messagesPreview.sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
     state.messagesPreview = messagesPreview;
-    state.messages = [...state.messages, payload.message];
+    state.messages = [...state.messages, message];
   },
 
   backToDialogList: (state) => {
@@ -427,3 +511,4 @@ export const {
 } = actions;
 
 export default reducer;
+

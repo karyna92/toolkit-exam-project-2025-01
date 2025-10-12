@@ -1,4 +1,4 @@
-const db = require('../models/postgresModels');
+const db = require('../models');
 const { BankDeclineError } = require('../errors');
 
 module.exports.updateBankBalance = async (data, predicate, transaction) => {

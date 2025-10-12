@@ -4,34 +4,25 @@ import moment from 'moment';
 import CONSTANTS from '../../../../constants';
 import {
   goToExpandedDialog,
-  changeChatFavorite,
-  changeChatBlock,
   changeShowAddChatToCatalogMenu,
 } from '../../../../store/slices/chatSlice';
 import DialogBox from '../DialogBox/DialogBox';
 import styles from './DialogList.module.sass';
 
 const DialogList = (props) => {
-  const changeFavorite = (data, event) => {
-    props.changeChatFavorite(data);
-    event.stopPropagation();
-  };
-
-  const changeBlackList = (data, event) => {
-    props.changeChatBlock(data);
-    event.stopPropagation();
-  };
-
   const changeShowCatalogCreation = (event, chatId) => {
     props.changeShowAddChatToCatalogMenu(chatId);
     event.stopPropagation();
   };
+  const onlyFavoriteDialogs = (chatPreview, userId) => {
+    const userIndex = chatPreview.participants.indexOf(userId);
+    return userIndex !== -1 ? chatPreview.favoriteList[userIndex] : false;
+  };
 
-  const onlyFavoriteDialogs = (chatPreview, userId) =>
-    chatPreview.favoriteList[chatPreview.participants.indexOf(userId)];
-
-  const onlyBlockDialogs = (chatPreview, userId) =>
-    chatPreview.blackList[chatPreview.participants.indexOf(userId)];
+  const onlyBlockDialogs = (chatPreview, userId) => {
+    const userIndex = chatPreview.participants.indexOf(userId);
+    return userIndex !== -1 ? chatPreview.blackList[userIndex] : false;
+  };
 
   const getTimeStr = (time) => {
     const currentTime = moment();
@@ -49,18 +40,18 @@ const DialogList = (props) => {
       goToExpandedDialog,
       chatMode,
       removeChat,
-      interlocutor,
+      onBlockToggle,
+      onFavoriteToggle,
     } = props;
+
     preview.forEach((chatPreview, index) => {
       const dialogNode = (
         <DialogBox
           interlocutor={chatPreview.interlocutor}
           chatPreview={chatPreview}
           userId={userId}
-          key={index}
+          key={chatPreview.id}
           getTimeStr={getTimeStr}
-          changeFavorite={changeFavorite}
-          changeBlackList={changeBlackList}
           chatMode={chatMode}
           catalogOperation={
             chatMode === CONSTANTS.CATALOG_PREVIEW_CHAT_MODE
@@ -68,6 +59,8 @@ const DialogList = (props) => {
               : changeShowCatalogCreation
           }
           goToExpandedDialog={goToExpandedDialog}
+          onFavoriteToggle={onFavoriteToggle}
+          onBlockToggle={onBlockToggle}
         />
       );
       if (filterFunc && filterFunc(chatPreview, userId)) {
@@ -99,8 +92,6 @@ const mapStateToProps = (state) => state.chatStore;
 
 const mapDispatchToProps = (dispatch) => ({
   goToExpandedDialog: (data) => dispatch(goToExpandedDialog(data)),
-  changeChatFavorite: (data) => dispatch(changeChatFavorite(data)),
-  changeChatBlock: (data) => dispatch(changeChatBlock(data)),
   changeShowAddChatToCatalogMenu: (data) =>
     dispatch(changeShowAddChatToCatalogMenu(data)),
 });

@@ -1,4 +1,4 @@
-const db = require('../models/postgresModels');
+const db = require('../models');
 const { NotFoundError, UncorrectPassword, ServerError } = require('../errors');
 const bcrypt = require('bcrypt');
 

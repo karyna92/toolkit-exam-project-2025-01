@@ -29,6 +29,7 @@ const ChatInput = (props) => {
             name="message"
             type="text"
             label="message"
+            showError={false}
             classes={{
               container: styles.container,
               input: styles.input,

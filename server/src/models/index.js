@@ -13,7 +13,7 @@ const configPath =
         '..',
         'src/server/config/postgresConfig.json'
       )
-    : path.join(__dirname, '..', '..', '/config/postgresConfig.json');
+    : path.join(__dirname, '..', '/config/postgresConfig.json');
 const config = require(configPath)[env];
 const db = {};
 

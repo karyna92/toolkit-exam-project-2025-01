@@ -1,37 +1,40 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import {
-  backToDialogList,
-  changeChatFavorite,
-  changeChatBlock,
-} from '../../../../store/slices/chatSlice';
+import { backToDialogList } from '../../../../store/slices/chatSlice';
 import styles from './ChatHeader.module.sass';
 import CONSTANTS from '../../../../constants';
 
 const ChatHeader = (props) => {
-  const changeFavorite = (data, event) => {
-    props.changeChatFavorite(data);
-    event.stopPropagation();
-  };
-
-  const changeBlackList = (data, event) => {
-    props.changeChatBlock(data);
-    event.stopPropagation();
-  };
-
-  const isFavorite = (chatData, userId) => {
-    const { favoriteList, participants } = chatData;
-    return favoriteList[participants.indexOf(userId)];
-  };
-
-  const isBlocked = (chatData, userId) => {
-    const { participants, blackList } = chatData;
-    return blackList[participants.indexOf(userId)];
-  };
-
   const { avatar, firstName } = props.interlocutor;
-  const { backToDialogList, chatData, userId } = props;
+  const {
+    backToDialogList,
+    chatData,
+    userId,
+    onFavoriteToggle,
+    onBlockToggle,
+  } = props;
+
+  let isFavorite = false;
+  let isBlocked = false;
+
+  if (chatData && chatData.participants) {
+    const { participants, favoriteList = [], blackList = [] } = chatData;
+    const userIndex = participants.indexOf(userId);
+    isFavorite = userIndex !== -1 ? favoriteList[userIndex] : false;
+    isBlocked = userIndex !== -1 ? blackList[userIndex] : false;
+  }
+
+  const handleFavoriteClick = (event) => {
+    event.stopPropagation();
+    onFavoriteToggle(chatData, event);
+  };
+
+  const handleBlockClick = (event) => {
+    event.stopPropagation();
+    onBlockToggle(chatData, event);
+  };
+
   return (
     <div className={styles.chatHeader}>
       <div
@@ -58,34 +61,20 @@ const ChatHeader = (props) => {
         {chatData && (
           <div>
             <i
-              onClick={(event) =>
-                changeFavorite(
-                  {
-                    participants: chatData.participants,
-                    favoriteFlag: !isFavorite(chatData, userId),
-                  },
-                  event
-                )
-              }
+              onClick={handleFavoriteClick}
               className={classNames({
-                'far fa-heart': !isFavorite(chatData, userId),
-                'fas fa-heart': isFavorite(chatData, userId),
+                'far fa-heart': !isFavorite,
+                'fas fa-heart': isFavorite,
               })}
+              style={{ color: isFavorite ? 'red' : 'inherit' }}
             />
             <i
-              onClick={(event) =>
-                changeBlackList(
-                  {
-                    participants: chatData.participants,
-                    blackListFlag: !isBlocked(chatData, userId),
-                  },
-                  event
-                )
-              }
+              onClick={handleBlockClick}
               className={classNames({
-                'fas fa-user-lock': !isBlocked(chatData, userId),
-                'fas fa-unlock': isBlocked(chatData, userId),
+                'fas fa-user-lock': isBlocked,
+                'fas fa-unlock': !isBlocked,
               })}
+              style={{ color: isBlocked ? 'red' : 'inherit' }}
             />
           </div>
         )}
@@ -95,14 +84,49 @@ const ChatHeader = (props) => {
 };
 
 const mapStateToProps = (state) => {
-  const { interlocutor, chatData } = state.chatStore;
-  return { interlocutor, chatData };
+  const { interlocutor, chatData, optimisticStatus } = state.chatStore;
+  const userId = state.userStore.data.id;
+
+  if (!chatData) {
+    return { interlocutor, chatData, userId };
+  }
+
+  const optimisticData = optimisticStatus[chatData.id];
+
+  if (!optimisticData) {
+    return { interlocutor, chatData, userId };
+  }
+
+  const targetUserId = optimisticData.userId || userId;
+  const userIndex = chatData.participants.indexOf(targetUserId);
+
+  if (userIndex === -1) {
+    return { interlocutor, chatData, userId };
+  }
+
+  const mergedChatData = {
+    ...chatData,
+    favoriteList: [...(chatData.favoriteList || [])],
+    blackList: [...(chatData.blackList || [])],
+  };
+
+  if (optimisticData.favoriteList !== undefined) {
+    mergedChatData.favoriteList[userIndex] = optimisticData.favoriteList;
+  }
+
+  if (optimisticData.blackList !== undefined) {
+    mergedChatData.blackList[userIndex] = optimisticData.blackList;
+  }
+
+  return {
+    interlocutor,
+    chatData: mergedChatData,
+    userId,
+  };
 };
 
 const mapDispatchToProps = (dispatch) => ({
   backToDialogList: () => dispatch(backToDialogList()),
-  changeChatFavorite: (data) => dispatch(changeChatFavorite(data)),
-  changeChatBlock: (data) => dispatch(changeChatBlock(data)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ChatHeader);

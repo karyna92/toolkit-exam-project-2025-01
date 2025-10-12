@@ -10,6 +10,8 @@ import {
   changeShowModeCatalog,
   clearChatError,
   getPreviewChat,
+  changeChatFavorite,
+  changeChatBlock,
 } from '../../../../store/slices/chatSlice';
 import { chatController } from '../../../../api/ws/socketController';
 import CONSTANTS from '../../../../constants';
@@ -28,6 +30,36 @@ class Chat extends React.Component {
     chatController.unsubscribeChat(this.props.userStore.data.id);
   }
 
+  handleFavoriteToggle = (chatData, event) => {
+    if (event) event.stopPropagation();
+
+    const { participants, id, favoriteList = [] } = chatData;
+    const userIndex = participants.indexOf(this.props.userStore.data.id);
+    const isFavorite = userIndex !== -1 ? favoriteList[userIndex] : false;
+
+    this.props.changeChatFavorite({
+      participants,
+      favoriteFlag: !isFavorite,
+      conversationId: id,
+      userId:this.props.userStore.data.id
+    });
+  };
+
+  handleBlockToggle = (chatData, event) => {
+    if (event) event.stopPropagation();
+
+    const { participants, id, blackList = [] } = chatData;
+    const userIndex = participants.indexOf(this.props.userStore.data.id);
+    const isBlocked = userIndex !== -1 ? blackList[userIndex] : false;
+
+    this.props.changeChatBlock({
+      participants,
+      blackListFlag: !isBlocked,
+      conversationId: id,
+      userId: this.props.userStore.data.id,
+    });
+  };
+
   renderDialogList = () => {
     const { setChatPreviewMode } = this.props;
     const { chatMode, isShowChatsInCatalog } = this.props.chatStore;
@@ -38,6 +70,7 @@ class Chat extends React.Component {
       BLOCKED_PREVIEW_CHAT_MODE,
       CATALOG_PREVIEW_CHAT_MODE,
     } = CONSTANTS;
+
     return (
       <div>
         {isShowChatsInCatalog && <CatalogListHeader />}
@@ -85,17 +118,22 @@ class Chat extends React.Component {
         {chatMode === CATALOG_PREVIEW_CHAT_MODE ? (
           <CatalogListContainer />
         ) : (
-          <DialogListContainer userId={id} />
+          <DialogListContainer
+            userId={id}
+            onFavoriteToggle={this.handleFavoriteToggle}
+            onBlockToggle={this.handleBlockToggle}
+          />
         )}
       </div>
     );
   };
 
   render() {
-    const { isExpanded, isShow, isShowCatalogCreation, error } =
+    const { isExpanded, isShow, isShowCatalogCreation, error, chatData } =
       this.props.chatStore;
     const { id } = this.props.userStore.data;
     const { changeShow, getPreviewChat } = this.props;
+
     return (
       <div
         className={classNames(styles.chatContainer, {
@@ -104,7 +142,16 @@ class Chat extends React.Component {
       >
         {error && <ChatError getData={getPreviewChat} />}
         {isShowCatalogCreation && <CatalogCreation />}
-        {isExpanded ? <Dialog userId={id} /> : this.renderDialogList()}
+        {isExpanded ? (
+          <Dialog
+            userId={id}
+            chatData={chatData}
+            onFavoriteToggle={this.handleFavoriteToggle}
+            onBlockToggle={this.handleBlockToggle}
+          />
+        ) : (
+          this.renderDialogList()
+        )}
         <div className={styles.toggleChat} onClick={() => changeShow()}>
           {isShow ? 'Hide Chat' : 'Show Chat'}
         </div>
@@ -124,6 +171,8 @@ const mapDispatchToProps = (dispatch) => ({
   changeShowModeCatalog: () => dispatch(changeShowModeCatalog()),
   clearChatError: () => dispatch(clearChatError()),
   getPreviewChat: () => dispatch(getPreviewChat()),
+  changeChatFavorite: (data) => dispatch(changeChatFavorite(data)),
+  changeChatBlock: (data) => dispatch(changeChatBlock(data)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Chat);

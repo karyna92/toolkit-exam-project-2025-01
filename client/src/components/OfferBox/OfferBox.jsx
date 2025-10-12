@@ -19,15 +19,17 @@ import './confirmStyle.css';
 const OfferBox = (props) => {
   const findConversationInfo = () => {
     const { messagesPreview, id } = props;
+
     const participants = [id, props.data.User.id];
     participants.sort(
       (participant1, participant2) => participant1 - participant2
     );
+
     for (let i = 0; i < messagesPreview.length; i++) {
       if (isEqual(participants, messagesPreview[i].participants)) {
         return {
           participants: messagesPreview[i].participants,
-          _id: messagesPreview[i]._id,
+          id: messagesPreview[i].id,
           blackList: messagesPreview[i].blackList,
           favoriteList: messagesPreview[i].favoriteList,
         };
@@ -102,7 +104,12 @@ const OfferBox = (props) => {
   const goChat = () => {
     props.goToExpandedDialog({
       interlocutor: props.data.User,
-      conversationData: findConversationInfo(),
+      conversationData: findConversationInfo() || {
+        id: null,
+        participants: [props.id, props.data.User.id],
+        blackList: [false, false],
+        favoriteList: [false, false],
+      },
     });
   };
 

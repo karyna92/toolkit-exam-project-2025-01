@@ -64,6 +64,14 @@ module.exports = (sequelize, DataTypes) => {
     User.hasMany(models.Offers, { foreignKey: 'userId' });
     User.hasMany(models.Contests, { foreignKey: 'userId' });
     User.hasMany(models.Ratings, { foreignKey: 'userId' });
+    User.hasMany(models.Catalog, { foreignKey: 'userId' });
+    User.hasMany(models.Messages, { foreignKey: 'senderId' });
+    User.belongsToMany(models.Conversations, {
+      through: models.ConversationToParticipants,
+      foreignKey: 'userId',
+      otherKey: 'conversationId',
+      as: 'conversations',
+    });
   };
 
   return User;

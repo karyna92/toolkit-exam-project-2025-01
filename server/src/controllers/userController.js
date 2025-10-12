@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { v4: uuid } = require('uuid');
 const moment = require('moment');
-const db = require('../models/postgresModels');
+const db = require('../models');
 const { NotUniqueEmail } = require('../errors');
 const controller = require('../sockets/socketInit');
 const userQueries = require('../queries/userQueries');
