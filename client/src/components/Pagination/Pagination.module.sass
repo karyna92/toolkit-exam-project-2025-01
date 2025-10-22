@@ -1,0 +1,50 @@
+.paginationContainer
+  display: flex
+  align-items: center
+  justify-content: center
+  gap: 2rem 
+  margin: 30px 0 10px
+
+.navButton
+  padding: 8px 16px
+  border: 1px solid #ddd
+  background: white
+  border-radius: 4px
+  cursor: pointer
+  font-size: 14px
+  color: #333
+  transition: all 0.2s
+
+  &:hover:not(.disabled)
+    background: #f8f9fa
+    border-color: #007bff
+    color: #007bff
+
+  &.disabled
+    opacity: 0.4
+    cursor: not-allowed
+
+.pageNumbers
+  display: flex
+  gap: 4px
+
+.ellipsis
+  margin: 0 10px 0 
+
+.pageButton
+  padding: 6px 12px
+  border: 1px solid #ddd
+  background: white
+  cursor: pointer
+  font-size: 14px
+  color: #333
+  border: none
+  border-radius: 4px
+
+  &:hover
+    background: #f8f9fa
+
+  &.active
+    background: #007bff
+    border-color: #007bff
+    color: white

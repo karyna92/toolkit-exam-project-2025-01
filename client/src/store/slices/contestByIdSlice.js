@@ -56,9 +56,7 @@ const getContestByIdExtraReducers = createExtraReducers({
 export const addOffer = decorateAsyncThunk({
   key: `${CONTEST_BY_ID_SLICE_NAME}/addOffer`,
   thunk: async (payload) => {
-    console.log(payload);
     const { data } = await restController.setNewOffer(payload);
-    console.log(data);
     return data;
   },
 });
@@ -78,8 +76,9 @@ const addOfferExtraReducers = createExtraReducers({
 export const setOfferStatus = decorateAsyncThunk({
   key: `${CONTEST_BY_ID_SLICE_NAME}/setOfferStatus`,
   thunk: async (payload) => {
-    console.log(payload);
+    console.log('slice payload:',payload)
     const { data } = await restController.setOfferStatus(payload);
+    console.log('slice data:', data);
     return data;
   },
 });

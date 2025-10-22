@@ -23,12 +23,10 @@ const initialState = {
 export const getContests = decorateAsyncThunk({
   key: `${CONTESTS_SLICE_NAME}/getContests`,
   thunk: async ({ requestData, role }) => {
-    console.log(requestData);
     const { data } =
       role === CONSTANTS.CUSTOMER
         ? await restController.getCustomersContests(requestData)
         : await restController.getActiveContests(requestData);
-    console.log(data);
     return data;
   },
 });

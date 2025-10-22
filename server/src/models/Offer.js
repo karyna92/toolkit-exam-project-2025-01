@@ -29,13 +29,19 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
       },
       status: {
-        type: DataTypes.STRING,
+        type: DataTypes.ENUM(
+          'pending',
+          'approved',
+          'won',
+          'rejected',
+          'declined'
+        ),
         allowNull: true,
         defaultValue: 'pending',
       },
     },
     {
-      timestamps: false,
+      timestamps: true,
     }
   );
 

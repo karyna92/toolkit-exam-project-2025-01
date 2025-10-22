@@ -2,7 +2,7 @@ const { Router } = require('express');
 const checkToken = require('../middlewares/checkToken');
 const contestController = require('../controllers/contestController');
 const basicMiddlewares = require('../middlewares/basicMiddlewares');
-const { uploadArray, uploadSingle } = require('../utils/fileUpload');
+const { uploadSingle } = require('../utils/fileUpload');
 
 const contestRouter = Router();
 
@@ -12,6 +12,14 @@ contestRouter.get(
   basicMiddlewares.onlyForCreative,
   contestController.getContests
 );
+
+contestRouter.get(
+  '/offers',
+  checkToken.checkToken,
+  basicMiddlewares.onlyForModerator,
+  contestController.getContestsWithOffers
+);
+
 contestRouter.get(
   '/customer',
   checkToken.checkToken,
@@ -42,7 +50,7 @@ contestRouter.get(
 contestRouter.post(
   '/dataForContest',
   checkToken.checkToken,
-  contestController.dataForContest //// have to rewrite later
+  contestController.dataForContest
 );
 
 contestRouter.post(
@@ -56,7 +64,7 @@ contestRouter.post(
 contestRouter.post(
   '/setOfferStatus',
   checkToken.checkToken,
-  basicMiddlewares.onlyForCustomerWhoCreateContest,
+  basicMiddlewares.onlyForCustomerWhoCreateContestAndModerator,
   contestController.setOfferStatus
 );
 

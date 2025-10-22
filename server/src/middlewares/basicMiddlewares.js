@@ -34,7 +34,10 @@ module.exports.canGetContest = async (req, res, next) => {
           },
         },
       });
+    } else if (req.tokenData.role === CONSTANTS.MODERATOR) {
+      result = await db.Contests.findByPk(contestId);
     }
+
     result ? next() : next(new RightsError());
   } catch (e) {
     next(new ServerError(e));
@@ -57,6 +60,14 @@ module.exports.onlyForCustomer = (req, res, next) => {
   }
 };
 
+module.exports.onlyForModerator = (req, res, next) => {
+  console.log('Role in middleware:', req.tokenData.role);
+  if (req.tokenData.role !== CONSTANTS.MODERATOR) {
+    return next(new RightsError('Access denied: moderators only'));
+  }
+  next();
+};
+
 module.exports.canSendOffer = async (req, res, next) => {
   try {
     if (req.tokenData.role === CONSTANTS.CUSTOMER) {
@@ -76,8 +87,15 @@ module.exports.canSendOffer = async (req, res, next) => {
   }
 };
 
-module.exports.onlyForCustomerWhoCreateContest = async (req, res, next) => {
+module.exports.onlyForCustomerWhoCreateContestAndModerator = async (
+  req,
+  res,
+  next
+) => {
   try {
+    if (req.tokenData.role === CONSTANTS.MODERATOR) {
+      return next();
+    }
     const result = await db.Contests.findOne({
       where: {
         userId: req.tokenData.userId,
@@ -85,6 +103,7 @@ module.exports.onlyForCustomerWhoCreateContest = async (req, res, next) => {
         status: CONSTANTS.CONTEST_STATUS_ACTIVE,
       },
     });
+
     if (!result) {
       return next(new RightsError());
     }

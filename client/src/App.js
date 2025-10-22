@@ -9,7 +9,7 @@ import Payment from './pages/Payment/Payment';
 import StartContestPage from './pages/StartContestPage/StartContestPage';
 import Dashboard from './pages/Dashboard/Dashboard';
 import NotFound from './components/NotFound/NotFound';
-import HowItWorks from './pages/HowItWorksPage/HowItWorks'
+import HowItWorks from './pages/HowItWorksPage/HowItWorks';
 import Home from './pages/Home/Home';
 import ContestPage from './pages/ContestPage/ContestPage';
 import UserProfile from './pages/UserProfile/UserProfile';
@@ -22,6 +22,7 @@ import ChatContainer from './components/Chat/ChatComponents/ChatContainer/ChatCo
 import Layout from './pages/Layout/Layout';
 import OnlyNotAuthorizedUserRoute from './components/Routes/OnlyNotAuthorizedUserRoute/OnlyNotAuthorizedUserRoute';
 import PrivateRoute from './components/Routes/PrivateRoute/PrivateRoute';
+import MoseratorsPage from './pages/ModeratorsPage/ModeratorsPage';
 
 class App extends Component {
   render() {
@@ -49,6 +50,7 @@ class App extends Component {
             </Route>
 
             <Route element={<PrivateRoute />}>
+              <Route path="/offers" element={<MoseratorsPage />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/startContest" element={<StartContestPage />} />
               <Route
@@ -60,7 +62,7 @@ class App extends Component {
                   />
                 }
               />
-              <Route path='/events' element={<Events/>}/>
+              <Route path="/events" element={<Events />} />
               <Route
                 path="/startContest/taglineContest"
                 element={

@@ -3,6 +3,7 @@ const { ServerError, NotFoundError, BadRequestError } = require('../errors');
 const contestQueries = require('../queries/contestQueries');
 const controller = require('../sockets/socketInit');
 const UtilFunctions = require('../utils/functions');
+const { mailing } = require('../utils/mailing');
 const contestService = require('../services/contestService');
 const CONSTANTS = require('../constants');
 
@@ -12,7 +13,6 @@ module.exports.dataForContest = async (req, res, next) => {
     const {
       body: { characteristic1, characteristic2 },
     } = req;
-    console.log(req.body, characteristic1, characteristic2);
     const types = [characteristic1, characteristic2, 'industry'].filter(
       Boolean
     );
@@ -39,6 +39,7 @@ module.exports.dataForContest = async (req, res, next) => {
     next(new ServerError('cannot get contest preferences'));
   }
 };
+
 module.exports.getContestById = async (req, res, next) => {
   const { contestId } = req.params;
   try {
@@ -99,13 +100,11 @@ module.exports.getContests = async (req, res, next) => {
       contestId,
       industry,
       awardSort,
-      limit: rawLimit,
-      offset: rawOffset,
       ownEntries: rawOwnEntries,
     } = req.query;
 
-    const limit = rawLimit ? Number(rawLimit) : 10;
-    const offset = rawOffset ? Number(rawOffset) : 0;
+    const limit = 50;
+    const offset = 0;
     const ownEntries = rawOwnEntries === 'true' || rawOwnEntries === true;
 
     const predicates = UtilFunctions.createWhereForAllContests(
@@ -114,6 +113,7 @@ module.exports.getContests = async (req, res, next) => {
       industry,
       awardSort
     );
+
     const contests = await db.Contests.findAll({
       where: predicates.where,
       order: predicates.order,
@@ -128,11 +128,11 @@ module.exports.getContests = async (req, res, next) => {
         },
       ],
     });
+
     contests.forEach(
       (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
     );
-
-    const haveMore = contests.length > 0;
+    const haveMore = contests.length === limit;
 
     res.send({ contests, haveMore });
   } catch (err) {
@@ -140,8 +140,11 @@ module.exports.getContests = async (req, res, next) => {
     next(new ServerError('Failed to fetch contests'));
   }
 };
+
 module.exports.getCustomersContests = (req, res, next) => {
-  const { limit, offset = 0, status } = req.query;
+  const limit = 50;
+  const offset = 0;
+  const { status } = req.query;
   if (!status) return next(new BadRequestError('Status query param required'));
   db.Contests.findAll({
     where: { status, userId: req.tokenData.userId },
@@ -153,6 +156,11 @@ module.exports.getCustomersContests = (req, res, next) => {
         model: db.Offers,
         required: false,
         attributes: ['id'],
+        where: {
+          status: {
+            [db.Sequelize.Op.ne]: CONSTANTS.OFFER_STATUS_PENDING,
+          },
+        },
       },
     ],
   })
@@ -174,11 +182,10 @@ module.exports.downloadFile = async (req, res, next) => {
   const contest = await db.Contests.findByPk(req.params.contestId);
   if (!contest) return next(new NotFoundError('Contest not found'));
   const file = CONSTANTS.CONTESTS_DEFAULT_DIR + req.params.fileName;
-  res.download(file); /////also take a look maybe ork with path , fs
+  res.download(file);
 };
 
 module.exports.updateContest = async (req, res, next) => {
-  console.log(req.body);
   if (req.file) {
     req.body.fileName = req.file.filename;
     req.body.originalFileName = req.file.originalname;
@@ -214,34 +221,93 @@ module.exports.setNewOffer = async (req, res, next) => {
   } catch (err) {
     next(new ServerError(err.message));
   }
-}; /// still take a look here
+};
 
 module.exports.setOfferStatus = async (req, res, next) => {
   const t = await db.sequelize.transaction();
+  const { role } = req.tokenData;
   try {
-    const { command } = req.body;
+    const { command, offerId, creatorId, contestId } = req.body;
 
     if (command === 'reject') {
       const offer = await contestService.rejectOffer(
-        req.body.offerId,
-        req.body.creatorId,
-        req.body.contestId,
+        offerId,
+        creatorId,
+        contestId,
         t
       );
       await t.commit();
+
+      controller
+        .getNotificationController()
+        .emitChangeOfferStatus(
+          creatorId,
+          'Someone of yours offers was rejected',
+          contestId
+        );
+
       return res.send(offer);
+    }
+
+    if (command === 'decline' && role === CONSTANTS.MODERATOR) {
+      const offer = await contestService.declineOffer(
+        offerId,
+        creatorId,
+        contestId,
+        t
+      );
+      await t.commit();
+      try {
+        await mailing(
+          offer.User.email,
+          'Offer Declined ❌',
+          `<p>Hi ${offer.User.firstName}, your offer <strong>${offer.text}</strong> was declined by the moderator!</p>`
+        );
+      } catch (emailError) {
+        console.error('Failed to send decline email:', emailError);
+      }
+
+      return res.send(offer);
+    }
+
+    if (command === 'approve' && role === CONSTANTS.MODERATOR) {
+      const approvedOffer = await contestService.approveOffer(
+        offerId,
+        creatorId,
+        contestId,
+        t
+      );
+      await t.commit();
+
+      try {
+        await mailing(
+          approvedOffer.User.email,
+          'Offer Approved ✅',
+          `<p>Hi ${approvedOffer.User.firstName}, your offer <strong>${approvedOffer.text}</strong> was approved by the moderator!</p>`
+        );
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError);
+      }
+
+      return res.send(approvedOffer);
     }
 
     if (command === 'resolve') {
       const winningOffer = await contestService.resolveOffer(
-        req.body.contestId,
-        req.body.creatorId,
+        role,
+        contestId,
+        creatorId,
         req.body.orderId,
-        req.body.offerId,
+        offerId,
         req.body.priority,
         t
       );
       await t.commit();
+
+      controller
+        .getNotificationController()
+        .emitChangeOfferStatus(creatorId, 'Your offer has won', contestId);
+
       return res.send(winningOffer);
     }
 
@@ -250,5 +316,106 @@ module.exports.setOfferStatus = async (req, res, next) => {
   } catch (err) {
     await t.rollback();
     next(err);
+  }
+};
+
+module.exports.getContestsWithOffers = async (req, res, next) => {
+  try {
+    const { status, page = 1 } = req.query;
+    const rowsPerPage = 20;
+    const offset = (page - 1) * rowsPerPage;
+
+    const offerWhere = {};
+    if (status && status !== 'all') {
+      offerWhere.status = status;
+    }
+
+    const totalOffersCount = await db.Offers.count({
+      include: [
+        {
+          model: db.Contests,
+          where: { status: ['active', 'finished'] },
+          required: true,
+        },
+      ],
+      where: offerWhere,
+    });
+
+    const contests = await db.Contests.findAll({
+      where: { status: ['active', 'finished'] },
+      include: [
+        {
+          model: db.Offers,
+          required: true,
+          where: offerWhere,
+          attributes: [
+            'id',
+            'status',
+            'text',
+            'fileName',
+            'createdAt',
+            'contestId',
+            'userId',
+          ],
+        },
+      ],
+      order: [['id', 'DESC']],
+    });
+
+    const allOffers = [];
+    contests.forEach((contest) => {
+      contest.Offers.forEach((offer) => {
+        allOffers.push({
+          ...offer.toJSON(),
+          Contest: {
+            id: contest.id,
+            title: contest.title,
+            contestType: contest.contestType,
+            status: contest.status,
+            prize: contest.prize,
+            industry: contest.industry,
+            focusOfWork: contest.focusOfWork,
+            targetCustomer: contest.targetCustomer,
+          },
+        });
+      });
+    });
+
+    allOffers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const paginatedOffers = allOffers.slice(offset, offset + rowsPerPage);
+
+    const contestsMap = new Map();
+    paginatedOffers.forEach((offer) => {
+      const contestId = offer.Contest.id;
+      if (!contestsMap.has(contestId)) {
+        contestsMap.set(contestId, {
+          ...offer.Contest,
+          Offers: [],
+        });
+      }
+      contestsMap.get(contestId).Offers.push({
+        id: offer.id,
+        status: offer.status,
+        text: offer.text,
+        fileName: offer.fileName,
+        createdAt: offer.createdAt,
+        contestId: offer.contestId,
+        userId: offer.userId,
+      });
+    });
+
+    const paginatedContests = Array.from(contestsMap.values());
+    const totalPages = Math.ceil(totalOffersCount / rowsPerPage);
+
+    res.send({
+      contests: paginatedContests,
+      totalCount: totalOffersCount,
+      currentPage: parseInt(page),
+      totalPages: totalPages,
+    });
+  } catch (err) {
+    console.error('Error in getContestsWithOffers:', err);
+    next(new ServerError('Failed to fetch contests with offers'));
   }
 };

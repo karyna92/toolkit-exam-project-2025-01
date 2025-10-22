@@ -5,16 +5,23 @@ import CONSTANTS from '../../constants';
 import styles from './ContestSideBar.module.sass';
 
 const ContestSideBar = (props) => {
-  const getTimeStr = () => {
-    const diff = moment.duration(
-      moment().diff(moment(props.contestData.createdAt))
-    );
-    let str = '';
-    if (diff._data.days !== 0) str = `${diff._data.days} days `;
-    if (diff._data.hours !== 0) str += `${diff._data.hours} hours`;
-    if (str.length === 0) str = 'less than one hour';
-    return str;
-  };
+   const getTimeStr = () => {
+     const now = moment();
+     const createdAt = moment.utc(props.data.createdAt).local();
+     const diffMinutes = now.diff(createdAt, 'minutes');
+     const diffHours = now.diff(createdAt, 'hours');
+  
+     if (diffMinutes < 1) {
+       return 'just now';
+     } else if (diffMinutes < 60) {
+       return `${diffMinutes}m`;
+     } else if (diffHours < 24) {
+       return `${diffHours}h`;
+     } else {
+       const days = Math.floor(diffHours / 24);
+       return `${days}d`;
+     }
+   };
 
   const renderContestInfo = () => {
     const { totalEntries } = props;

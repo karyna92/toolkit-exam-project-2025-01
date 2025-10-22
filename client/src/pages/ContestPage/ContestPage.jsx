@@ -39,12 +39,32 @@ class ContestPage extends React.Component {
   };
 
   setOffersList = () => {
+    const { role } = this.props.userStore.data;
+
+    let filteredOffers;
+    if (role === CONSTANTS.MODERATOR) {
+      filteredOffers = this.props.contestByIdStore.offers;
+    } else if (role === CONSTANTS.CREATOR) { 
+      filteredOffers = this.props.contestByIdStore.offers;
+    } else if (role === CONSTANTS.CUSTOMER) {
+      filteredOffers = this.props.contestByIdStore.offers.filter((offer) => {
+        return (
+          offer.status === CONSTANTS.OFFER_STATUS_APPROVED ||
+          offer.status === CONSTANTS.OFFER_STATUS_WON ||
+          offer.status === CONSTANTS.OFFER_STATUS_REJECTED
+        );
+      });
+    } else {
+      filteredOffers = this.props.contestByIdStore.offers;
+    }
+
+
     const array = [];
-    for (let i = 0; i < this.props.contestByIdStore.offers.length; i++) {
+    for (let i = 0; i < filteredOffers.length; i++) {
       array.push(
         <OfferBox
-          data={this.props.contestByIdStore.offers[i]}
-          key={this.props.contestByIdStore.offers[i].id}
+          data={filteredOffers[i]}
+          key={filteredOffers[i].id}
           needButtons={this.needButtons}
           setOfferStatus={this.setOfferStatus}
           contestType={this.props.contestByIdStore.contestData.contestType}
@@ -68,7 +88,7 @@ class ContestPage extends React.Component {
     return (
       contestCreatorId === userId &&
       contestStatus === CONSTANTS.CONTEST_STATUS_ACTIVE &&
-      offerStatus === CONSTANTS.OFFER_STATUS_PENDING
+      offerStatus === CONSTANTS.OFFER_STATUS_APPROVED
     );
   };
 
@@ -97,7 +117,7 @@ class ContestPage extends React.Component {
       if (isEqual(participants, messagesPreview[i].participants)) {
         return {
           participants: messagesPreview[i].participants,
-          _id: messagesPreview[i]._id,
+          id: messagesPreview[i].id,
           blackList: messagesPreview[i].blackList,
           favoriteList: messagesPreview[i].favoriteList,
         };
@@ -202,7 +222,7 @@ class ContestPage extends React.Component {
             </div>
             <ContestSideBar
               contestData={contestData}
-              totalEntries={offers.length}
+              totalEntries={offers.filter((o)=>o.status!== 'pending').length}
             />
           </div>
         )}

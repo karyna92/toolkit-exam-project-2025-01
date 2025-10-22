@@ -17,7 +17,7 @@ export const updateContest = (data) => http.put('contests/update', data);
 export const dataForContest = (data) =>
   http.post('contests/dataForContest', data);
 export const downloadContestFile = (data) =>
-  http.get(`contests${contestId}/files/${data.fileName}`);
+  http.get(`contests${data.contestId}/files/${data.fileName}`);
 export const getContestById = ({ contestId }) =>
   http.get(`contests/${contestId}`);
 export const getCustomersContests = ({ limit, offset, contestStatus }) =>
@@ -26,27 +26,30 @@ export const getCustomersContests = ({ limit, offset, contestStatus }) =>
   });
 
 export const getActiveContests = ({
-  offset,
-  limit,
   typeIndex,
   contestId,
   industry,
   awardSort,
   ownEntries,
+  page,
 }) =>
   http.get('contests', {
     params: {
-      offset,
-      limit,
       typeIndex,
       contestId,
       industry,
       awardSort,
       ownEntries,
+      page,
     },
   });
 
 ////offers
+export const getContestsWithOffers = ({ status, page  }) =>
+  http.get('contests/offers', {
+    params: { status, page },
+  });
+  
 export const setNewOffer = (data) => http.post('contests/newOffer', data);
 export const setOfferStatus = (data) =>
   http.post('contests/setOfferStatus', data);

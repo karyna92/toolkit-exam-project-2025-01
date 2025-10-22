@@ -1,7 +1,6 @@
 const db = require('../models');
 const contestQueries = require('../queries/contestQueries');
 const userQueries = require('../queries/userQueries');
-const controller = require('../sockets/socketInit');
 const CONSTANTS = require('../constants');
 
 module.exports.buildOfferObject = (req) => {
@@ -27,17 +26,28 @@ module.exports.rejectOffer = async (offerId, creatorId, contestId) => {
     { status: CONSTANTS.OFFER_STATUS_REJECTED },
     { id: offerId }
   );
-  controller
-    .getNotificationController()
-    .emitChangeOfferStatus(
-      creatorId,
-      'Someone of yours offers was rejected',
-      contestId
-    );
+
   return rejectedOffer;
+};
+module.exports.declineOffer = async (offerId, creatorId, contestId) => {
+  const declinedOffer = await contestQueries.updateOffer(
+    { status: CONSTANTS.OFFER_STATUS_DECLINED },
+    { id: offerId }
+  );
+  return declinedOffer;
+};
+
+module.exports.approveOffer = async (offerId, creatorId, contestId) => {
+  const approvedOffer = await contestQueries.updateOffer(
+    { status: CONSTANTS.OFFER_STATUS_APPROVED },
+    { id: offerId }
+  );
+
+  return approvedOffer;
 };
 
 module.exports.resolveOffer = async (
+  role,
   contestId,
   creatorId,
   orderId,
@@ -45,58 +55,89 @@ module.exports.resolveOffer = async (
   priority,
   transaction
 ) => {
-  const finishedContest = await contestQueries.updateContestStatus(
-    {
-      status: db.sequelize.literal(`
-        CASE
-          WHEN "id"=${contestId} AND "orderId"='${orderId}'
-            THEN '${CONSTANTS.CONTEST_STATUS_FINISHED}'
-          WHEN "orderId"='${orderId}' AND "priority"=${priority + 1}
-            THEN '${CONSTANTS.CONTEST_STATUS_ACTIVE}'
-          ELSE '${CONSTANTS.CONTEST_STATUS_PENDING}'
-        END
-      `),
-    },
-    { orderId },
-    transaction
-  );
-
-  await userQueries.updateUser(
-    { balance: db.sequelize.literal('balance + ' + finishedContest.prize) },
-    creatorId,
-    transaction
-  );
-
-  const updatedOffers = await contestQueries.updateOfferStatus(
-    {
-      status: db.sequelize.literal(`
-        CASE
-          WHEN "id"=${offerId} THEN '${CONSTANTS.OFFER_STATUS_WON}'
-          ELSE '${CONSTANTS.OFFER_STATUS_REJECTED}'
-        END
-      `),
-    },
-    { contestId },
-    transaction
-  );
-
-  const arrayRoomsId = updatedOffers
-    .filter(
-      (o) =>
-        o.status === CONSTANTS.OFFER_STATUS_REJECTED && o.userId !== creatorId
-    )
-    .map((o) => o.userId);
-
-  controller
-    .getNotificationController()
-    .emitChangeOfferStatus(
-      arrayRoomsId,
-      'Someone of yours offers was rejected',
-      contestId
+  try {
+    const finishedContest = await contestQueries.updateContestStatus(
+      {
+        status: db.sequelize.literal(`
+          CASE
+            WHEN "id"=${contestId} AND "orderId"='${orderId}'
+              THEN '${CONSTANTS.CONTEST_STATUS_FINISHED}'
+            WHEN "orderId"='${orderId}' AND "priority"=${priority + 1}
+              THEN '${CONSTANTS.CONTEST_STATUS_ACTIVE}'
+            ELSE '${CONSTANTS.CONTEST_STATUS_PENDING}'
+          END
+        `),
+      },
+      { orderId },
+      transaction
     );
-  controller
-    .getNotificationController()
-    .emitChangeOfferStatus(creatorId, 'Someone of your offers WIN', contestId);
+    await userQueries.updateUser(
+      { balance: db.sequelize.literal('balance + ' + finishedContest.prize) },
+      creatorId,
+      transaction
+    );
 
-  return updatedOffers[0].dataValues;
+    const winningOfferUpdate = await contestQueries.updateOfferStatus(
+      { status: CONSTANTS.OFFER_STATUS_WON },
+      { id: offerId },
+      transaction
+    );
+
+    const rejectedOffersUpdate = await contestQueries.updateOfferStatus(
+      { status: CONSTANTS.OFFER_STATUS_REJECTED },
+      {
+        contestId: contestId,
+        id: { [db.Sequelize.Op.ne]: offerId },
+      },
+      transaction
+    );
+    const updatedOffers = await db.Offers.findAll({
+      where: { contestId: contestId },
+      include: [
+        {
+          model: db.Users,
+          attributes: ['id', 'role', 'displayName', 'email'],
+        },
+      ],
+      transaction,
+    });
+
+    console.log('🔔 [resolveOffer] DEBUG - All offers in contest:');
+    updatedOffers.forEach((offer, index) => {
+      console.log(`  Offer ${index + 1}:`, {
+        offerId: offer.id,
+        userId: offer.userId,
+        userRole: offer.User.role,
+        userDisplayName: offer.User.displayName,
+        userEmail: offer.User.email,
+        status: offer.status,
+      });
+    });
+
+    const moderatorsInOffers = updatedOffers.filter(
+      (o) => o.User.role === CONSTANTS.MODERATOR
+    );
+    if (moderatorsInOffers.length > 0) {
+      console.log(
+        '🚨 [resolveOffer] FOUND MODERATORS IN OFFERS:',
+        moderatorsInOffers.map((m) => ({
+          offerId: m.id,
+          userId: m.userId,
+          displayName: m.User.displayName,
+        }))
+      );
+    }
+
+    const arrayRoomsId = updatedOffers
+      .filter(
+        (o) =>
+          o.status === CONSTANTS.OFFER_STATUS_REJECTED && o.userId !== creatorId
+      )
+      .map((o) => o.userId);
+
+    console.log('🔔 [resolveOffer] Users to notify:', arrayRoomsId);
+    return updatedOffers.find((o) => o.id === offerId)?.dataValues;
+  } catch (error) {
+    throw error;
+  }
 };

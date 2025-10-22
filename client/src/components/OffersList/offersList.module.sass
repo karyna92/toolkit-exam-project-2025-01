@@ -1,0 +1,324 @@
+@mixin bordered($sides: all, $color: #ddd, $width: 1px, $style: solid)
+  @if $sides == all
+    border: #{$width} #{$style} #{$color}
+  @else
+    @each $side in $sides
+      border-#{$side}: #{$width} #{$style} #{$color}
+
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap)
+  display: flex
+  flex-direction: $direction
+  justify-content: $justify
+  align-items: $align
+  flex-wrap: $wrap
+
+@mixin transition($props: all, $duration: 0.3s, $ease: ease)
+  transition: #{$props} #{$duration} #{$ease}
+
+@mixin button($bg, $color: white)
+  background-color: $bg
+  color: $color
+  border: none
+  border-radius: 4px
+  padding: 6px 10px
+  cursor: pointer
+  font-size: 12px
+  font-weight: bold
+  min-width: 30px
+  height: 32px
+  @include transition(background-color)
+
+  &:hover:not(:disabled)
+    background-color: darken($bg, 10%)
+
+  &:disabled
+    background-color: #95a5a6
+    cursor: not-allowed
+
+@mixin respond($break)
+  @if $break == sm
+    @media (max-width: 600px)
+      @content
+  @else if $break == md
+    @media (max-width: 900px)
+      @content
+  @else if $break == lg
+    @media (max-width: 1200px)
+      @content
+
+.container
+  padding: 0 20px 20px
+  max-width: 1200px
+  margin: 0 auto
+
+.tableHeader
+  display: grid
+  grid-template-columns: minmax(150px, 2fr) minmax(50px, 0.7fr) minmax(550px, 5.3fr)
+  gap: 1px
+  background-color: #f0f0f0
+  @include bordered(right, #cacaca)
+  font-weight: bold
+
+.tableHeaderNested
+  display: grid
+  grid-template-columns: minmax(250px, 3fr) minmax(150px, 1.3fr) minmax(150px, 1fr)
+  gap: 1px
+  align-items: stretch
+  width: 100%
+
+.headerCell,
+.headerCellNested
+  padding: 12px 15px
+  background-color: #455a89
+  color: white
+  text-align: left
+  @include bordered(right, #cacaca)
+
+  &:last-child
+    border-right: none
+
+.tableBody
+  @include bordered(all, #cacaca)
+  border-top: none
+
+.tableRow
+  display: grid
+  grid-template-columns: minmax(150px, 2fr) minmax(50px, 0.7fr) minmax(550px, 5.3fr)
+  gap: 1px
+  background-color: #f9f9f9
+
+  &:nth-child(even)
+    background-color: #f0f0f0
+
+  &:hover
+    background-color: rgba(219, 244, 241, 0.331)
+
+.tableCell
+  padding: 12px 15px
+  @include flex(row, space-between, center, wrap)
+  @include bordered((right, bottom), #d7d7d7)
+  &:last-child
+    border-right: none
+
+.combinedColumn
+  grid-column: 3
+  padding: 0 !important
+  border-right: none !important
+
+.offersGrid
+  display: grid
+  grid-template-columns: minmax(250px, 3fr) minmax(150px, 1.3fr) minmax(150px, 1fr)
+  gap: 1px
+  align-items: stretch
+  width: 100%
+
+.offerRow
+  display: contents
+
+.tableCellNested
+  padding: 12px 15px
+  @include flex(row, center, center)
+  @include bordered((bottom, right), #d7d7d7)
+  &:last-child
+    border-right: none
+
+.offerRow:last-child
+  .tableCellNested
+    border-bottom: none
+
+.offerDetail
+  grid-column: 1
+  @include flex(row, space-between, flex-start)
+  gap: 4px
+
+.offerFile
+  grid-column: 2
+  white-space: nowrap
+
+.offerAction
+  grid-column: 3
+  @include flex(row, center, center)
+  gap: 20px
+
+.contestNameButton
+  align-self: flex-end
+  background: none
+  border: none
+  color: #6b7fa8
+  cursor: pointer
+  text-align: left
+  padding: 0
+  font: inherit
+  text-decoration: underline
+  @include transition(color)
+  @include flex(row, flex-start, center)
+  gap: 8px
+
+  &:hover
+    color: #2980b9
+    text-decoration: none
+
+.count
+  margin: auto
+
+.expandIcon
+  font-size: 0.8em
+  @include transition(transform)
+
+.expandedRow
+  grid-column: 1 / -1
+  background-color: rgba(168, 238, 232, 0.474)
+  padding: 20px
+  border-bottom: 2px solid #454748
+
+
+.contestDetails
+  h4
+    font-weight: 600
+    margin: 0 0 15px 0
+    color: #2c3e50
+    border-bottom: 1px solid #ddd
+
+.detailsGrid
+  display: grid
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr))
+  gap: 10px
+
+  p
+    margin: 0
+    padding: 8px 0
+    border-bottom: 1px solid #ecf0f1
+
+    strong
+      display: inline-block
+      width: 120px
+      color: #13171b
+
+.filesSection
+  margin-top: 20px
+  padding-top: 15px
+  border-top: 1px solid #ddd
+
+  h5
+    margin: 0 0 10px 0
+    color: #2c3e50
+    font-size: 1em
+
+.fileLink,
+.fileButton
+  display: inline-block
+  padding: 6px 12px
+  color: #2c3e50
+  text-decoration: none
+  border-radius: 4px
+  font-size: 0.9em
+  @include transition(background-color)
+
+  &:hover
+    background-color: #69a6cf
+
+.fileButton
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+  max-width: 150px
+
+.offerText
+  word-wrap: break-word
+  line-height: 1.4
+
+.approveButton
+  @include button(#27ae60)
+
+.declineButton
+  @include button(#e74c3c)
+
+.offerStatus
+  font-size: 0.7em
+  padding: 2px 6px
+  border-radius: 10px
+  font-weight: bold
+  text-transform: uppercase
+
+  &.pending
+    background-color: #dfd10d
+    color: white
+
+  &.approved
+    background-color: #27ae60
+    color: white
+
+  &.rejected
+    background-color: #e74c3c
+    color: white
+
+  &.declined
+    background-color: #f39c12
+    color: white
+  &.won
+    background-color: #f312d1
+    color: white  
+
+.noFiles,
+.noOffersMessage
+  color: #95a5a6
+  font-style: italic
+
+.noOffersMessage
+  text-align: center
+  padding: 20px
+
+.mobileHeader
+  display: none
+
+
+@include respond(md)
+  .tableRow,
+  .tableHeader
+    display: grid
+    grid-template-columns: 1fr 4fr
+    gap: 8px
+    &:hover
+      background-color: none
+
+  .headerCell
+    display: none
+
+  .mobileHeader
+    width: 90%
+    display: block
+    padding: 8px 0
+    font-weight: 600
+    color: white
+    background-color: #455a89
+    @include bordered(right, #cacaca)
+    text-align: center
+    line-height: 1.2
+
+  .tableCell
+    @include flex(column, center, center)
+    padding: 8px 15px
+    text-align: left
+    @include bordered((bottom, right), #ddd)
+    &:last-child
+      border-bottom: none
+      border-right: none
+
+  .combinedColumn
+    grid-column: 2
+
+  .offersGrid
+    grid-template-columns: 1.5fr 1fr 1fr
+    gap: 8px
+
+  .tableCellNested
+    @include flex(column, flex-start, center)
+    gap: 12px
+    padding: 8px
+    @include bordered(bottom, #ddd)
+
+    &:first-child
+      @include bordered(left, #ddd)
+
+
+

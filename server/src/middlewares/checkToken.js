@@ -33,11 +33,21 @@ module.exports.checkAuth = async (req, res, next) => {
 };
 
 module.exports.checkToken = async (req, res, next) => {
-  const accessToken = req.headers.authorization;
-  if (!accessToken) return next(new TokenError('Token is required'));
+  // const accessToken = req.headers.authorization;
+  // // console.log('req', req);
+  // console.log('accessToken:', accessToken);
+  // if (!accessToken) return next(new TokenError('Token is required'));
+  const authHeader = req.headers.authorization;
+  console.log('authHeader', authHeader);
+  if (!authHeader) return next(new TokenError('Token is required'));
 
+  const accessToken = authHeader.startsWith('Bearer ')
+    ? authHeader.slice(7)
+    : authHeader;
+  console.log(' accessToken', accessToken);
   try {
     req.tokenData = jwt.verify(accessToken, CONSTANTS.JWT_SECRET);
+    console.log('tokenData', req.tokenData);
     next();
   } catch (err) {
     if (err.name === 'JsonWebTokenError')

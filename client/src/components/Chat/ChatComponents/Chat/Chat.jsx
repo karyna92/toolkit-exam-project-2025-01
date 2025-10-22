@@ -21,6 +21,7 @@ import CatalogListHeader from '../../CatalogComponents/CatalogListHeader/Catalog
 import ChatError from '../../../ChatError/ChatError';
 
 class Chat extends React.Component {
+
   componentDidMount() {
     chatController.subscribeChat(this.props.userStore.data.id);
     this.props.getPreviewChat();
@@ -41,7 +42,7 @@ class Chat extends React.Component {
       participants,
       favoriteFlag: !isFavorite,
       conversationId: id,
-      userId:this.props.userStore.data.id
+      userId: this.props.userStore.data.id,
     });
   };
 

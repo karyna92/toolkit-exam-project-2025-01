@@ -14,44 +14,43 @@ module.exports.updateContest = async (data, predicate, transaction) => {
   }
 };
 
-module.exports.updateContestStatus = async (data, predicate, transaction) => {
-  const updateResult = await db.Contests.update(data, {
-    where: predicate,
-    returning: true,
-    transaction,
-  });
-  if (updateResult[0] < 1) {
-    throw new ServerError('cannot update Contest');
-  } else {
-    return updateResult[1][0].dataValues;
-  }
-};
-
+// module.exports.updateOffer = async (data, predicate, transaction) => {
+//   const [updatedCount, [updatedOffer]] = await db.Offers.update(data, {
+//     where: predicate,
+//     returning: true,
+//     transaction,
+//   });
+//   if (updatedCount !== 1) {
+//     throw new ServerError('cannot update offer!');
+//   } else {
+//     return updatedOffer.dataValues;
+//   }
+// };
 module.exports.updateOffer = async (data, predicate, transaction) => {
   const [updatedCount, [updatedOffer]] = await db.Offers.update(data, {
     where: predicate,
     returning: true,
     transaction,
   });
+
   if (updatedCount !== 1) {
     throw new ServerError('cannot update offer!');
-  } else {
-    return updatedOffer.dataValues;
   }
-};
 
-module.exports.updateOfferStatus = async (data, predicate, transaction) => {
-  const result = await db.Offers.update(data, {
-    where: predicate,
-    returning: true,
+  const offerWithUser = await db.Offers.findOne({
+    where: { id: updatedOffer.id },
+    include: [
+      {
+        model: db.Users,
+        attributes: ['email', 'firstName'],
+      },
+    ],
     transaction,
   });
-  if (result[0] < 1) {
-    throw new ServerError('cannot update offer!');
-  } else {
-    return result[1];
-  }
+
+  return offerWithUser;
 };
+
 
 module.exports.createOffer = async (data) => {
   const result = await db.Offers.create(data);
@@ -61,3 +60,34 @@ module.exports.createOffer = async (data) => {
     return result.get({ plain: true });
   }
 };
+
+
+module.exports.updateOfferStatus = async (data, filter, transaction) => {
+
+  try {
+    const [updatedCount, updatedOffers] = await db.Offers.update(data, {
+      where: filter,
+      transaction,
+      returning: true,
+    });
+
+    return updatedOffers || [];
+  } catch (error) {
+    throw error;
+  }
+};
+
+module.exports.updateContestStatus = async (data, filter, transaction) => {
+
+  try {
+    const [updatedCount, updatedContests] = await db.Contests.update(data, {
+      where: filter,
+      transaction,
+      returning: true,
+    });
+    return updatedContests?.[0] || null;
+  } catch (error) {
+    throw error;
+  }
+};
+

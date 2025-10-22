@@ -22,89 +22,111 @@ class Header extends React.Component {
   startContests = () => {
     this.props.navigate('/startContest');
   };
-
   renderLoginButtons = () => {
-    if (this.props.data) {
+    const { data, ongoingEvents = [], hasSeenOngoingEvents } = this.props;
+
+    // User is not logged in
+    if (!data) {
       return (
         <>
-          <div className={styles.userInfo}>
-            <img
-              src={
-                this.props.data.avatar === 'anon.png'
-                  ? CONSTANTS.ANONYM_IMAGE_PATH
-                  : `${CONSTANTS.publicURL}${this.props.data.avatar}`
-              }
-              alt="user"
-            />
-            <span>{`Hi, ${this.props.data.displayName}`}</span>
-            <img
-              src={`${CONSTANTS.STATIC_IMAGES_PATH}menu-down.png`}
-              alt="menu"
-            />
-            {this.props.ongoingEvents.length > 0 &&
-              !this.props.hasSeenOngoingEvents && (
-                <div className={styles.notificationDot}></div>
-              )}
-            <ul>
-              <li>
-                <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-                  <span>View Dashboard</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/account" style={{ textDecoration: 'none' }}>
-                  <span>My Account</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="http:/www.google.com"
-                  style={{ textDecoration: 'none' }}
-                >
-                  <span>Messages</span>
-                </Link>
-              </li>
-              {this.props.data?.role === 'customer' && (
-                <li>
-                  <Link to="/events" style={{ textDecoration: 'none' }}>
-                    <div className={styles.events}>
-                      <span>Events</span>
-                      {this.props.ongoingEvents.length > 0 && (
-                        <p>{this.props.ongoingEvents.length}</p>
-                      )}
-                    </div>
-                  </Link>
-                </li>
-              )}
-              <li>
-                <Link
-                  to="http:/www.google.com"
-                  style={{ textDecoration: 'none' }}
-                >
-                  <span>Affiliate Dashboard</span>
-                </Link>
-              </li>
-              <li>
-                <span onClick={this.logOut}>Logout</span>
-              </li>
-            </ul>
-          </div>
-          <img
-            src={`${CONSTANTS.STATIC_IMAGES_PATH}email.png`}
-            className={styles.emailIcon}
-            alt="email"
-          />
+          <Link to="/login" style={{ textDecoration: 'none' }}>
+            <span className={styles.btn}>LOGIN</span>
+          </Link>
+          <Link to="/registration" style={{ textDecoration: 'none' }}>
+            <span className={styles.btn}>SIGN UP</span>
+          </Link>
         </>
       );
     }
+
+    const isModerator = data.role === 'moderator';
+    const isCustomer = data.role === 'customer';
+
     return (
       <>
-        <Link to="/login" style={{ textDecoration: 'none' }}>
-          <span className={styles.btn}>LOGIN</span>
-        </Link>
-        <Link to="/registration" style={{ textDecoration: 'none' }}>
-          <span className={styles.btn}>SIGN UP</span>
-        </Link>
+        <div className={styles.userInfo}>
+          <img
+            src={
+              data.avatar === 'anon.png'
+                ? CONSTANTS.ANONYM_IMAGE_PATH
+                : `${CONSTANTS.publicURL}${data.avatar}`
+            }
+            alt="user"
+          />
+          <span>{`Hi, ${data.displayName}`}</span>
+          <img
+            src={`${CONSTANTS.STATIC_IMAGES_PATH}menu-down.png`}
+            alt="menu"
+          />
+          {ongoingEvents.length > 0 && !hasSeenOngoingEvents && (
+            <div className={styles.notificationDot}></div>
+          )}
+
+          <ul>
+            {isModerator ? (
+              <>
+                <li>
+                  <Link to="/offers" style={{ textDecoration: 'none' }}>
+                    <span>Offers</span>
+                  </Link>
+                </li>
+                <li>
+                  <span onClick={this.logOut}>Logout</span>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+                    <span>View Dashboard</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/account" style={{ textDecoration: 'none' }}>
+                    <span>My Account</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="http://www.google.com"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span>Messages</span>
+                  </Link>
+                </li>
+                {isCustomer && (
+                  <li>
+                    <Link to="/events" style={{ textDecoration: 'none' }}>
+                      <div className={styles.events}>
+                        <span>Events</span>
+                        {ongoingEvents.length > 0 && (
+                          <p>{ongoingEvents.length}</p>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                )}
+                <li>
+                  <Link
+                    to="http://www.google.com"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <span>Affiliate Dashboard</span>
+                  </Link>
+                </li>
+                <li>
+                  <span onClick={this.logOut}>Logout</span>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+
+        <img
+          src={`${CONSTANTS.STATIC_IMAGES_PATH}email.png`}
+          className={styles.emailIcon}
+          alt="email"
+        />
       </>
     );
   };
@@ -276,7 +298,7 @@ class Header extends React.Component {
                 </li>
               </ul>
             </div>
-            {this.props.data && this.props.data.role !== CONSTANTS.CREATOR && (
+            {this.props.data && this.props.data.role === CONSTANTS.CUSTOMER && (
               <div
                 className={styles.startContestBtn}
                 onClick={this.startContests}
