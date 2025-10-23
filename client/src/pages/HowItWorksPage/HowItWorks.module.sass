@@ -215,7 +215,7 @@ html, body
     border-radius: 15px
     margin-bottom: 2rem
 
-    li
+    .tabItem
       align-self: center
       flex: 1 1 auto 
       list-style: none
@@ -223,7 +223,7 @@ html, body
       border-radius: 15px
       cursor: pointer
       font-size: 16px
-      transition: color 0.3s
+      transition: color 0.3s ease, background-color 0.3s ease
 
       &:hover
         background: #f0f0f0
@@ -297,9 +297,16 @@ html, body
   &.open
     opacity: 1
 
-.activeTab 
+.activeTab
   color: #fff
-  @include gradient-bg(45deg, #ff6955, #e97543)
+  background-color: #ff6955
+  align-self: center
+  flex: 1 1 auto 
+  list-style: none
+  padding: 0.7rem 0.3rem
+  border-radius: 15px
+  cursor: pointer
+  font-size: 16px
 
 .search
   display: flex

@@ -29,7 +29,7 @@ const HowItWorks = () => {
       if (!startTime) startTime = currentTime;
       const timeElapsed = currentTime - startTime;
       const progress = Math.min(timeElapsed / duration, 1);
- 
+
       const ease = -(Math.cos(Math.PI * progress) - 1) / 2;
       window.scrollTo(0, startY + distance * ease);
 
@@ -201,7 +201,9 @@ const HowItWorks = () => {
                 <li
                   key={tab.name}
                   onClick={() => handleTabClick(tab)}
-                  className={activeTab === tab.name ? styles.activeTab : ''}
+                  className={
+                    activeTab === tab.name ? styles.activeTab : styles.tabItem
+                  }
                 >
                   {tab.name}
                 </li>

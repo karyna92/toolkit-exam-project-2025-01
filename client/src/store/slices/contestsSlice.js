@@ -18,6 +18,8 @@ const initialState = {
     ownEntries: false,
   },
   haveMore: true,
+  totalCount: 1,
+  totalPages:1,
 };
 
 export const getContests = decorateAsyncThunk({
@@ -54,6 +56,8 @@ const extraReducers = (builder) => {
     state.isFetching = false;
     state.contests = [...state.contests, ...payload.contests];
     state.haveMore = payload.haveMore;
+    state.totalCount = payload.totalCount;
+    state.totalPages = payload.totalPages;
   });
   builder.addCase(getContests.rejected, (state, { payload }) => {
     state.isFetching = false;

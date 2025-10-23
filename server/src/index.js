@@ -2,6 +2,7 @@ const http = require('http');
 require('dotenv').config();
 const app = require('./app');
 const controller = require('./sockets/socketInit');
+require('./services/dailyBackup');
 
 const PORT = process.env.PORT || 3001;
 const server = http.createServer(app);

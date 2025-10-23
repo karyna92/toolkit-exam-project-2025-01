@@ -1,5 +1,5 @@
-import React from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
 import className from 'classnames';
 import {
@@ -10,26 +10,61 @@ import ChatHeader from '../../ChatComponents/ChatHeader/ChatHeader';
 import styles from './Dialog.module.sass';
 import ChatInput from '../../ChatComponents/ChatInut/ChatInput';
 
-class Dialog extends React.Component {
-  componentDidMount() {
-    const { interlocutor } = this.props;
+const Dialog = ({ onFavoriteToggle, onBlockToggle }) => {
+  const dispatch = useDispatch();
+  const messagesEndRef = useRef(null);
+
+  const { interlocutor, chatData, messages, optimisticStatus } = useSelector(
+    (state) => state.chatStore
+  );
+  const userId = useSelector((state) => state.userStore.data.id);
+
+  let processedChatData = chatData;
+  if (chatData && optimisticStatus && chatData.id) {
+    const optimisticData = optimisticStatus[chatData.id];
+
+    if (optimisticData) {
+      processedChatData = {
+        ...chatData,
+        favoriteList: [...(chatData.favoriteList || [])],
+        blackList: [...(chatData.blackList || [])],
+      };
+
+      const targetUserId = optimisticData.userId || userId;
+      const userIndex = chatData.participants.indexOf(targetUserId);
+
+      if (userIndex !== -1) {
+        if (optimisticData.favoriteList !== undefined) {
+          processedChatData.favoriteList[userIndex] =
+            optimisticData.favoriteList;
+        }
+        if (optimisticData.blackList !== undefined) {
+          processedChatData.blackList[userIndex] = optimisticData.blackList;
+        }
+      }
+    }
+  }
+
+  useEffect(() => {
     if (interlocutor?.id) {
-      this.props.getDialog({ interlocutorId: interlocutor.id });
+      dispatch(getDialogMessages({ interlocutorId: interlocutor.id }));
     }
-    this.scrollToBottom();
-  }
+    scrollToBottom();
+  }, [dispatch, interlocutor]);
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.messages !== this.props.messages) {
-      this.scrollToBottom();
-    }
-  }
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
-  messagesEnd = React.createRef();
+  useEffect(() => {
+    return () => {
+      dispatch(clearMessageList());
+    };
+  }, [dispatch]);
 
-  scrollToBottom = () => {
-    if (this.messagesEnd.current) {
-      this.messagesEnd.current.scrollIntoView({
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
         behavior: 'auto',
         block: 'end',
         inline: 'nearest',
@@ -37,12 +72,7 @@ class Dialog extends React.Component {
     }
   };
 
-  componentWillUnmount() {
-    this.props.clearMessageList();
-  }
-
-  renderMainDialog = () => {
-    const { messages, userId } = this.props;
+  const renderMainDialog = () => {
     let currentTime = moment();
     const messagesArray = [];
 
@@ -74,25 +104,27 @@ class Dialog extends React.Component {
     return (
       <div className={styles.messageList}>
         {messagesArray}
-        <div ref={this.messagesEnd} />
+        <div ref={messagesEndRef} />
       </div>
     );
   };
 
-  blockMessage = () => {
-    const { userId, chatData } = this.props;
-
-    if (!chatData || !chatData.blackList || !chatData.participants) {
+  const blockMessage = () => {
+    if (
+      !processedChatData ||
+      !processedChatData.blackList ||
+      !processedChatData.participants
+    ) {
       return null;
     }
 
-    const userIndex = chatData.participants.indexOf(userId);
+    const userIndex = processedChatData.participants.indexOf(userId);
     let message;
-    const firstName = this.props.interlocutor?.firstName || 'user';
+    const firstName = interlocutor?.firstName || 'user';
 
-    if (userIndex !== -1 && chatData.blackList[userIndex]) {
+    if (userIndex !== -1 && processedChatData.blackList[userIndex]) {
       message = `You blocked ${firstName}`;
-    } else if (chatData.blackList.includes(true)) {
+    } else if (processedChatData.blackList.includes(true)) {
       message = `${firstName} blocked you`;
     }
 
@@ -101,77 +133,24 @@ class Dialog extends React.Component {
     ) : null;
   };
 
-  render() {
-    const { chatData, userId } = this.props;
+  const isBlocked =
+    processedChatData &&
+    processedChatData.blackList &&
+    Array.isArray(processedChatData.blackList) &&
+    processedChatData.blackList.includes(true);
 
-    const isBlocked =
-      chatData &&
-      chatData.blackList &&
-      Array.isArray(chatData.blackList) &&
-      chatData.blackList.includes(true);
-
-    return (
-      <>
-        <ChatHeader
-          userId={userId}
-          chatData={chatData}
-          onBlockToggle={this.props.onBlockToggle}
-          onFavoriteToggle={this.props.onFavoriteToggle}
-        />
-        {this.renderMainDialog()}
-        {isBlocked ? this.blockMessage() : <ChatInput />}
-      </>
-    );
-  }
-}
-
-const mapStateToProps = (state) => {
-  const { interlocutor, chatData, messages, optimisticStatus } =
-    state.chatStore;
-  const userId = state.userStore.data.id;
-
-  if (!chatData) {
-    return { interlocutor, chatData, messages, userId };
-  }
-
-  const optimisticData = optimisticStatus[chatData.id];
-
-  if (!optimisticData) {
-    return { interlocutor, chatData, messages, userId };
-  }
-
-  const targetUserId = optimisticData.userId || userId;
-  const userIndex = chatData.participants.indexOf(targetUserId);
-
-  if (userIndex === -1) {
-    return { interlocutor, chatData, messages, userId };
-  }
-
-  const mergedChatData = {
-    ...chatData,
-    favoriteList: [...(chatData.favoriteList || [])],
-    blackList: [...(chatData.blackList || [])],
-  };
-
-  if (optimisticData.favoriteList !== undefined) {
-    mergedChatData.favoriteList[userIndex] = optimisticData.favoriteList;
-  }
-
-  if (optimisticData.blackList !== undefined) {
-    mergedChatData.blackList[userIndex] = optimisticData.blackList;
-  }
-
-  return {
-    interlocutor,
-    chatData: mergedChatData,
-    messages,
-    userId,
-  };
+  return (
+    <>
+      <ChatHeader
+        userId={userId}
+        chatData={processedChatData}
+        onBlockToggle={onBlockToggle}
+        onFavoriteToggle={onFavoriteToggle}
+      />
+      {renderMainDialog()}
+      {isBlocked ? blockMessage() : <ChatInput />}
+    </>
+  );
 };
 
-const mapDispatchToProps = (dispatch) => ({
-  getDialog: (data) => dispatch(getDialogMessages(data)),
-  clearMessageList: () => dispatch(clearMessageList()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Dialog);
+export default Dialog;

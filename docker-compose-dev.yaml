@@ -25,19 +25,10 @@ services:
       - "3002:3000"
     depends_on:
       - db-dev
-      - mongo-dev
     volumes:
       - ./var/www/html/images:/var/www/html/images
       - ./server:/server
       - /server/node_modules
-
-
-  mongo-dev:
-    image: mongo:6.0.11
-    ports:
-      - "12345:27017"
-
-
 
   db-dev:
     image: postgres:15.5-bullseye

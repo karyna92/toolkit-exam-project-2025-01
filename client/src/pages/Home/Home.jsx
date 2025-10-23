@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { connect } from 'react-redux';
+import { useSelector } from 'react-redux';
 import CONSTANTS from '../../constants';
 import SlideBar from '../../components/SlideBar/SlideBar';
 import styles from './Home.module.sass';
 import carouselConstants from '../../carouselConstants';
 import Spinner from '../../components/Spinner/Spinner';
 
-const Home = (props) => {
+const Home = () => {
   const [index, setIndex] = useState(0);
   const [styleName, setStyle] = useState(styles.headline__static);
   let timeout;
 
   useEffect(() => {
     timeout = setInterval(() => {
-      setIndex(index + 1);
+      setIndex((prevIndex) => prevIndex + 1);
       setStyle(styles.headline__isloading);
     }, 3000);
+
     return () => {
       setStyle(styles.headline__static);
       clearInterval(timeout);
     };
-  });
+  }, []);
 
-  const { isFetching } = props;
+  const isFetching = useSelector((state) => state.userStore.isFetching);
+
   const text =
     CONSTANTS.HEADER_ANIMATION_TEXT[
       index % CONSTANTS.HEADER_ANIMATION_TEXT.length
     ];
+
   return (
     <>
       {isFetching ? (
@@ -52,12 +55,14 @@ const Home = (props) => {
                 </Link>
               </div>
             </div>
+
             <div className={styles.greyContainer}>
               <SlideBar
                 images={carouselConstants.mainSliderImages}
                 carouselType={carouselConstants.MAIN_SLIDER}
               />
             </div>
+
             <div className={styles.container__description}>
               <h2 className={styles.blueUnderline}>Why Squadhelp?</h2>
               <div className={styles.cardContainer}>
@@ -104,6 +109,7 @@ const Home = (props) => {
                 </div>
               </div>
             </div>
+
             <div className={styles.greyContainer}>
               <div className={styles.adv}>
                 <div className={styles.images}>
@@ -137,6 +143,7 @@ const Home = (props) => {
                   />
                 </div>
               </div>
+
               <div className={styles.stats}>
                 <div>
                   <p>119,525</p>
@@ -152,7 +159,9 @@ const Home = (props) => {
                 </div>
               </div>
             </div>
+
             <h2>How Do Name Contest Work?</h2>
+
             <div className={styles.whiteContainer}>
               <div className={styles.stepReverse}>
                 <div>
@@ -178,6 +187,7 @@ const Home = (props) => {
                 />
               </div>
             </div>
+
             <div className={styles.greenContainer}>
               <div className={styles.step}>
                 <img
@@ -201,6 +211,7 @@ const Home = (props) => {
                 </div>
               </div>
             </div>
+
             <div className={styles.greyContainer}>
               <div className={styles.stepReverse}>
                 <div>
@@ -229,6 +240,7 @@ const Home = (props) => {
                 />
               </div>
             </div>
+
             <div className={styles.headerBar}>
               <h3>Names For Sale</h3>
               <p className={styles.blueUnderline}>
@@ -238,15 +250,18 @@ const Home = (props) => {
                 Logo design
               </p>
             </div>
+
             <SlideBar
               images={carouselConstants.exampleSliderImages}
               carouselType={carouselConstants.EXAMPLE_SLIDER}
             />
+
             <div className={styles.button}>
               <Link className={styles.button__link} to="/dashboard">
                 DASHBOARD
               </Link>
             </div>
+
             <div className={styles.blueContainer}>
               <h2 className={styles.whiteUnderline}>What our customers say</h2>
               <SlideBar
@@ -261,9 +276,4 @@ const Home = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  const { isFetching } = state.userStore;
-  return { isFetching };
-};
-
-export default connect(mapStateToProps, null)(Home);
+export default Home;

@@ -1,0 +1,204 @@
+# 📋 Project Overview
+
+[![Node.js](https://img.shields.io/badge/Node.js-v16+-green)](https://nodejs.org/)  
+[![Docker](https://img.shields.io/badge/Docker-v20+-blue)](https://www.docker.com/)  
+[![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org/)  
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-v14-blue)](https://www.postgresql.org/)
+
+
+**SquadHelp** is a crowdsourcing platform that connects businesses with creative professionals for naming, branding, and design contests.
+
+---
+
+## ⚙️ Prerequisites
+
+- **Node.js:** v16.0 or higher
+- **Docker:** v20.0 or higher
+- **Docker Compose:** v2.0 or higher
+
+---
+
+## 🚀 Start Development Environment
+
+```bash
+# Make script executable
+chmod +x start-dev.sh
+
+# Start all services
+sudo bash start-dev.sh
+
+---
+
+🌐 Access Points
+
+Frontend: http://localhost:5000
+Backend API: http://localhost:3002
+Database: localhost:12346
+
+---
+All environment variables are stored in the server/ .env file.
+
+# Application
+PORT=3000
+
+# Email Service (Resend)
+RESEND_API_KEY=re_7rYQ2gm1_Ypijk7TMXdr5XcTbkAjvAb3L
+RESENT_EMAIL='Squad Help <onboarding@resend.dev>
+---
+
+Database connection settings are defined in server/config/postgresConfig.json:
+{
+  "development": {
+    "username": "postgres",
+    "password": "password",
+    "database": "squad-help-dev",
+    "host": "localhost",
+    "port": 12346,
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  },
+  "test": {
+    "username": "postgres",
+    "password": "admin",
+    "database": "squad-help-test",
+    "host": "localhost",
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  },
+  "production": {
+    "username": "postgres",
+    "password": "admin",
+    "database": "squad-help-prod",
+    "host": "localhost",
+    "dialect": "postgres",
+    "operatorsAliases": "Op",
+    "seederStorage": "sequelize"
+  }
+}
+
+#Container Management:
+
+# Check running containers
+
+docker ps
+
+# Check specific container IP
+
+sudo docker container inspect exam-project-2022-client-dev-1
+
+# View logs
+
+docker logs <container-name>
+
+# Stop services
+
+docker compose --file docker-compose-dev.yaml do
+
+---
+
+🛠 Technical Specifications
+
+🧩 Backend Stack
+
+Runtime: Node.js
+
+Framework: Express.js
+
+ORM: Sequelize
+
+Database: PostgreSQL
+
+Authentication: JWT
+
+Email Service: Resend
+
+
+🎨 Frontend Stack
+
+Framework: React 18
+
+State Management: Redux Toolkit
+
+Routing: React Router v6
+
+Styling: SASS Modules
+
+Forms: Formik + Yup Validation
+
+
+Database Schema
+
+Users: Customers, Creatives, Moderators
+
+Contests: Active, Finished, Pending
+
+Offers: Creative submissions with status tracking
+
+Messages: Real-time chat system
+
+Transactions: Payment and payout tracking
+
+
+🔧 Development Features
+
+🐞 Bug Fixes
+
+Fixed multiple legacy bugs.
+
+Updated all outdated dependencies.
+
+Converted class components to functional components.
+
+
+🎨 Layout Improvements
+
+Created “How It Works” page and added it to the user menu under CONTESTS → How It Works.
+
+Implemented dynamic branding (Events system).
+
+Added Event and Button Group pages to the user menu.
+
+
+🗄️ Databases
+🧩 NoSQL (MongoDB)
+
+Added server/aggregation.mongodb.js file.
+
+Implemented query.mongodb to count records containing “locomotive” in the Messages collection.
+
+🧮 SQL (PostgreSQL)
+
+Added server/postgres.sql file.
+
+countOfUsers.sql: Counts users by role.
+
+customerCashback.sql: Adds 10% cashback for customers who made orders between Dec 25 – Jan 14.
+
+payoutWithMaxRating.sql: Pays $10 to the top 3 creatives with the highest rating.
+
+Added server/chatPostgres directory.
+
+Designed and added chat migration schema (chat-pg-connection.png).
+
+⚙️ Node.js Features
+
+Created error logger: server/scr/sevices/errorLogger.js.
+
+Added scheduled job (dailyBackup) to copy and clear logs with timestamped files.
+
+🌐 Fullstack Updates
+
+Added Moderator role.
+
+Implemented offer moderation with email notifications sent to creatives.
+
+🔄 Migration
+
+Migrated chat functionality from MongoDB to PostgreSQL.
+
+Added Sequelize models and migrations.
+
+Updated all related server logic accordingly.
+```

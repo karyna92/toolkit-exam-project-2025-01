@@ -1,6 +1,6 @@
 import React from 'react';
-import { Form, Formik } from 'formik';
-import { connect } from 'react-redux';
+import { Formik, Form } from 'formik';
+import { useSelector, useDispatch } from 'react-redux';
 import { clearUserError } from '../../store/slices/userSlice';
 import ImageUpload from '../InputComponents/ImageUpload/ImageUpload';
 import FormInput from '../FormInput/FormInput';
@@ -8,15 +8,26 @@ import Schems from '../../utils/validators/validationSchems';
 import Error from '../Error/Error';
 import styles from './UpdateUserInfoForm.module.sass';
 
-const UpdateUserInfoForm = (props) => {
-  const { onSubmit, submitting, error, clearUserError } = props;
+const UpdateUserInfoForm = ({ onSubmit, submitting }) => {
+  const dispatch = useDispatch();
+
+  const { data, error } = useSelector((state) => state.userStore);
+
+  const initialValues = {
+    firstName: data.firstName || '',
+    lastName: data.lastName || '',
+    displayName: data.displayName || '',
+  };
+
+  const handleClearError = () => dispatch(clearUserError());
+
   return (
     <Formik
       onSubmit={(values, actions) => {
         console.log('Submitting form values:', values);
-        onSubmit(values, actions); // call the real handler
+        onSubmit(values, actions); 
       }}
-      initialValues={props.initialValues}
+      initialValues={initialValues}
       validationSchema={Schems.UpdateUserSchema}
     >
       <Form className={styles.updateContainer}>
@@ -24,7 +35,7 @@ const UpdateUserInfoForm = (props) => {
           <Error
             data={error.data}
             status={error.status}
-            clearError={clearUserError}
+            clearError={handleClearError}
           />
         )}
         <div className={styles.container}>
@@ -41,12 +52,13 @@ const UpdateUserInfoForm = (props) => {
             }}
           />
         </div>
+
         <div className={styles.container}>
           <span className={styles.label}>Last Name</span>
           <FormInput
             name="lastName"
             type="text"
-            label="LastName"
+            label="Last Name"
             classes={{
               container: styles.inputContainer,
               input: styles.input,
@@ -55,6 +67,7 @@ const UpdateUserInfoForm = (props) => {
             }}
           />
         </div>
+
         <div className={styles.container}>
           <span className={styles.label}>Display Name</span>
           <FormInput
@@ -69,6 +82,7 @@ const UpdateUserInfoForm = (props) => {
             }}
           />
         </div>
+
         <ImageUpload
           name="file"
           classes={{
@@ -77,6 +91,7 @@ const UpdateUserInfoForm = (props) => {
             imgStyle: styles.imgStyle,
           }}
         />
+
         <button type="submit" disabled={submitting}>
           Submit
         </button>
@@ -85,20 +100,4 @@ const UpdateUserInfoForm = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  const { data, error } = state.userStore;
-  return {
-    error,
-    initialValues: {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      displayName: data.displayName,
-    },
-  };
-};
-
-const mapDispatchToProps = (dispatch) => ({
-  clearUserError: () => dispatch(clearUserError()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(UpdateUserInfoForm);
+export default UpdateUserInfoForm;

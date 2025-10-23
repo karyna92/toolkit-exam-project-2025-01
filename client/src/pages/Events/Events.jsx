@@ -1,51 +1,37 @@
 import React, { useEffect } from 'react';
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import EventForm from '../../components/Events/EventForm';
 import EventList from '../../components/Events/EventList';
 import styles from './eventsPage.module.sass';
 import {
-  addEvent,
-  deleteEvent,
-  addOngoingEvent,
-  markOngoingEventsAsSeen,
+  addEvent as addEventAction,
+  deleteEvent as deleteEventAction,
+  addOngoingEvent as addOngoingEventAction,
+  markOngoingEventsAsSeen as markOngoingEventsAsSeenAction,
 } from '../../store/slices/eventsSlice';
 
-const Events = ({
-  events,
-  ongoingEvents,
-  addEvent,
-  deleteEvent,
-  addOngoingEvent,
-  markOngoingEventsAsSeen,
-}) => {
+const Events = () => {
+  const dispatch = useDispatch();
+
+  const events = useSelector((state) => state.events.events);
+  const ongoingEvents = useSelector((state) => state.events.ongoingEvents);
+
   useEffect(() => {
     if (ongoingEvents.length > 0) {
-      markOngoingEventsAsSeen();
+      dispatch(markOngoingEventsAsSeenAction());
     }
-  }, []);
+  }, [ongoingEvents, dispatch]);
 
   return (
     <div className={styles.eventsContainer}>
-      <EventForm onAdd={addEvent} />
+      <EventForm onAdd={(event) => dispatch(addEventAction(event))} />
       <EventList
         events={events}
-        handleNotify={addOngoingEvent}
-        onDelete={deleteEvent}
+        handleNotify={(event) => dispatch(addOngoingEventAction(event))}
+        onDelete={(eventId) => dispatch(deleteEventAction(eventId))}
       />
     </div>
   );
 };
 
-const mapStateToProps = (state) => ({
-  events: state.events.events,
-  ongoingEvents: state.events.ongoingEvents,
-});
-
-const mapDispatchToProps = {
-  addEvent,
-  deleteEvent,
-  addOngoingEvent,
-  markOngoingEventsAsSeen,
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Events);
+export default Events;

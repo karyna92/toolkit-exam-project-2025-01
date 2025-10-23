@@ -1,5 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import Catalog from '../Catalog/Catalog';
 import styles from '../CatalogListContainer/CatalogListContainer.module.sass';
 import {
@@ -8,25 +8,27 @@ import {
 } from '../../../../store/slices/chatSlice';
 
 const CatalogList = (props) => {
+  const dispatch = useDispatch();
+  const { catalogList } = props;
+
   const goToCatalog = (event, catalog) => {
-    props.changeShowModeCatalog(catalog);
+    dispatch(changeShowModeCatalog(catalog));
     event.stopPropagation();
   };
 
-  const deleteCatalog = (event, catalogId) => {
-    props.deleteCatalog({ catalogId });
+  const handleDeleteCatalog = (event, catalogId) => {
+    dispatch(deleteCatalog({ catalogId }));
     event.stopPropagation();
   };
 
   const getListCatalog = () => {
-    const { catalogList } = props;
     const elementList = [];
     catalogList.forEach((catalog) => {
       elementList.push(
         <Catalog
           catalog={catalog}
           key={catalog.id}
-          deleteCatalog={deleteCatalog}
+          deleteCatalog={handleDeleteCatalog}
           goToCatalog={goToCatalog}
         />
       );
@@ -41,9 +43,4 @@ const CatalogList = (props) => {
   return <div className={styles.listContainer}>{getListCatalog()}</div>;
 };
 
-const mapDispatchToProps = (dispatch) => ({
-  changeShowModeCatalog: (data) => dispatch(changeShowModeCatalog(data)),
-  deleteCatalog: (data) => dispatch(deleteCatalog(data)),
-});
-
-export default connect(null, mapDispatchToProps)(CatalogList);
+export default CatalogList;

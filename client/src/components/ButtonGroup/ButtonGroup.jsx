@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import CONSTANTS from '../../constants';
 import styles from './ButtonGroup.module.sass';
 
@@ -13,13 +12,16 @@ const ButtonGroup = ({ selected, onChange }) => {
       <div className={styles.options}>
         {[0, 1, 2].map((index) => (
           <button
+            type="button"
             key={index}
             className={`${styles.btn} ${
               selected === index ? styles.activeTab : ''
             }`}
             onClick={() => handleClick(index)}
           >
-            {index===0 && <span className={styles.subtitle}>Recommended</span>}
+            {index === 0 && (
+              <span className={styles.subtitle}>Recommended</span>
+            )}
             {selected === index && (
               <img
                 className={styles.check}

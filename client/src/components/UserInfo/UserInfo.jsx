@@ -1,12 +1,17 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import UpdateUserInfoForm from '../UpdateUserInfoForm/UpdateUserInfoForm';
 import { updateUser } from '../../store/slices/userSlice';
 import { changeEditModeOnUserProfile } from '../../store/slices/userProfileSlice';
 import CONSTANTS from '../../constants';
 import styles from './UserInfo.module.sass';
 
-const UserInfo = (props) => {
+const UserInfo = () => {
+  const dispatch = useDispatch();
+
+  const data = useSelector((state) => state.userStore.data);
+  const isEdit = useSelector((state) => state.userProfile.isEdit);
+
   const updateUserData = (values) => {
     const formData = new FormData();
     if (values.file) formData.append('file', values.file);
@@ -19,10 +24,12 @@ const UserInfo = (props) => {
       console.log(pair[0], pair[1]);
     }
 
-    props.updateUser(formData);
+    dispatch(updateUser(formData));
   };
 
-  const { isEdit, changeEditMode, data } = props;
+  const changeEditMode = (value) =>
+    dispatch(changeEditModeOnUserProfile(value));
+
   const { avatar, firstName, lastName, displayName, email, role, balance } =
     data;
   const avatarUrl = avatar
@@ -76,15 +83,4 @@ const UserInfo = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  const { data } = state.userStore;
-  const { isEdit } = state.userProfile;
-  return { data, isEdit };
-};
-
-const mapDispatchToProps = (dispatch) => ({
-  updateUser: (data) => dispatch(updateUser(data)),
-  changeEditMode: (data) => dispatch(changeEditModeOnUserProfile(data)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(UserInfo);
+export default UserInfo;

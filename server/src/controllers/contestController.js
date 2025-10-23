@@ -101,10 +101,12 @@ module.exports.getContests = async (req, res, next) => {
       industry,
       awardSort,
       ownEntries: rawOwnEntries,
+      limit = 5,
+      offset = 0,
     } = req.query;
 
-    const limit = 50;
-    const offset = 0;
+    const parsedLimit = parseInt(limit);
+    const parsedOffset = parseInt(offset);
     const ownEntries = rawOwnEntries === 'true' || rawOwnEntries === true;
 
     const predicates = UtilFunctions.createWhereForAllContests(
@@ -117,8 +119,8 @@ module.exports.getContests = async (req, res, next) => {
     const contests = await db.Contests.findAll({
       where: predicates.where,
       order: predicates.order,
-      limit,
-      offset,
+      limit: parsedLimit,
+      offset: parsedOffset,
       include: [
         {
           model: db.Offers,
@@ -132,50 +134,79 @@ module.exports.getContests = async (req, res, next) => {
     contests.forEach(
       (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
     );
-    const haveMore = contests.length === limit;
 
-    res.send({ contests, haveMore });
+    const totalCount = await db.Contests.count({
+      where: predicates.where,
+    });
+
+    const haveMore = parsedOffset + parsedLimit < totalCount;
+
+    res.send({
+      contests,
+      haveMore,
+      totalCount,
+      currentPage: Math.floor(parsedOffset / parsedLimit) + 1,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+    });
   } catch (err) {
     console.error(err);
     next(new ServerError('Failed to fetch contests'));
   }
 };
 
-module.exports.getCustomersContests = (req, res, next) => {
-  const limit = 50;
-  const offset = 0;
-  const { status } = req.query;
-  if (!status) return next(new BadRequestError('Status query param required'));
-  db.Contests.findAll({
-    where: { status, userId: req.tokenData.userId },
-    limit,
-    offset,
-    order: [['id', 'DESC']],
-    include: [
-      {
-        model: db.Offers,
-        required: false,
-        attributes: ['id'],
-        where: {
-          status: {
-            [db.Sequelize.Op.ne]: CONSTANTS.OFFER_STATUS_PENDING,
+module.exports.getCustomersContests = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const { limit = 5, offset = 0 } = req.query;
+
+    if (!status)
+      return next(new BadRequestError('Status query param required'));
+
+    const parsedLimit = parseInt(limit);
+    const parsedOffset = parseInt(offset);
+
+    const contests = await db.Contests.findAll({
+      where: { status, userId: req.tokenData.userId },
+      limit: parsedLimit,
+      offset: parsedOffset,
+      order: [['id', 'DESC']],
+      include: [
+        {
+          model: db.Offers,
+          required: false,
+          attributes: ['id'],
+          where: {
+            status: {
+              [db.Sequelize.Op.notIn]: [
+                CONSTANTS.OFFER_STATUS_PENDING,
+                CONSTANTS.OFFER_STATUS_DECLINED,
+              ],
+            },
           },
         },
-      },
-    ],
-  })
-    .then((contests) => {
-      contests.forEach(
-        (contest) =>
-          (contest.dataValues.count = contest.dataValues.Offers.length)
-      );
-      let haveMore = true;
-      if (contests.length === 0) {
-        haveMore = false;
-      }
-      res.send({ contests, haveMore });
-    })
-    .catch((err) => next(new ServerError(err)));
+      ],
+    });
+
+    contests.forEach(
+      (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
+    );
+
+    const totalCount = await db.Contests.count({
+      where: { status, userId: req.tokenData.userId },
+    });
+
+    const haveMore = parsedOffset + parsedLimit < totalCount;
+
+    res.send({
+      contests,
+      haveMore,
+      totalCount,
+      currentPage: Math.floor(parsedOffset / parsedLimit) + 1,
+      totalPages: Math.ceil(totalCount / parsedLimit),
+    });
+  } catch (err) {
+    next(new ServerError(err));
+  }
 };
 
 module.exports.downloadFile = async (req, res, next) => {

@@ -1,4 +1,4 @@
-const backupLogs = require('./src/services/backupLogs');
+const backupLogs = require('./backupLogs');
 
 function scheduleDailyBackup(hour = 23, minute = 59) {
   const now = new Date();

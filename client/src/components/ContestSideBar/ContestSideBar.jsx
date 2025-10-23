@@ -1,31 +1,40 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import moment from 'moment';
 import CONSTANTS from '../../constants';
 import styles from './ContestSideBar.module.sass';
 
 const ContestSideBar = (props) => {
-   const getTimeStr = () => {
-     const now = moment();
-     const createdAt = moment.utc(props.data.createdAt).local();
-     const diffMinutes = now.diff(createdAt, 'minutes');
-     const diffHours = now.diff(createdAt, 'hours');
-  
-     if (diffMinutes < 1) {
-       return 'just now';
-     } else if (diffMinutes < 60) {
-       return `${diffMinutes}m`;
-     } else if (diffHours < 24) {
-       return `${diffHours}h`;
-     } else {
-       const days = Math.floor(diffHours / 24);
-       return `${days}d`;
-     }
-   };
+
+  const getTimeStr = () => {
+    if (!props.data || !props.data.createdAt) {
+      return 'just now';
+    }
+
+    const now = moment();
+    const createdAt = moment.utc(props.data.createdAt).local();
+    const diffMinutes = now.diff(createdAt, 'minutes');
+    const diffHours = now.diff(createdAt, 'hours');
+
+    if (diffMinutes < 1) {
+      return 'just now';
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes}m`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h`;
+    } else {
+      const days = Math.floor(diffHours / 24);
+      return `${days}d`;
+    }
+  };
 
   const renderContestInfo = () => {
+    if (!props.contestData) {
+      return <div className={styles.notFound}>Contest data not available</div>;
+    }
+
     const { totalEntries } = props;
     const { User, prize } = props.contestData;
+
     return (
       <div className={styles.contestSideBarInfo}>
         <div className={styles.contestInfo}>
@@ -65,7 +74,7 @@ const ContestSideBar = (props) => {
             </div>
           </div>
         </div>
-        {props.data.id !== User.id && (
+        {props.data && props.data.id !== User.id && (
           <div className={styles.infoCustomerContainer}>
             <span className={styles.labelCustomerInfo}>
               About Contest Holder
@@ -93,6 +102,4 @@ const ContestSideBar = (props) => {
   return renderContestInfo();
 };
 
-const mapStateToProps = (state) => state.userStore;
-
-export default connect(mapStateToProps, null)(ContestSideBar);
+export default ContestSideBar;

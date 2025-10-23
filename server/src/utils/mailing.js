@@ -10,7 +10,7 @@ async function mailing(email, subject, htmlContent) {
     }
 
     const { data, error } = await resend.emails.send({
-      from: 'Squad Help <onboarding@resend.dev>',
+      from: process.env.RESENT_EMAIL,
       to: [email],
       subject: subject,
       html: htmlContent,

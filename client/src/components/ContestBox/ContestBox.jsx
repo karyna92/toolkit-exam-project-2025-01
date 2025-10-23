@@ -80,7 +80,9 @@ const ContestBox = (props) => {
               src={`${CONSTANTS.STATIC_IMAGES_PATH}entrieImage.png`}
               alt="logo"
             />
-            <span>{count}</span>
+            <span>
+              {count}
+            </span>
           </div>
           <span>Entries</span>
         </div>

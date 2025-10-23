@@ -1,41 +1,66 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import classNames from 'classnames';
-import InputMask from 'react-input-mask';
+import MaskedInput from 'react-text-mask';
 import { useField } from 'formik';
 
-const PayInput = (props) => {
-  const { label, changeFocus, classes, isInputMask, mask } = props;
-  const [field, meta, helpers] = useField(props.name);
+const PayInput = forwardRef((props, ref) => {
+  const { label, changeFocus, classes, isInputMask, maskType } = props;
+  const [field, meta] = useField(props.name);
   const { touched, error } = meta;
+
+  const inputProps = {
+    ...field,
+    placeholder: label,
+    className: classNames(classes.input, {
+      [classes.notValid]: touched && error,
+    }),
+    onFocus: () => changeFocus && changeFocus(field.name),
+    ref,
+  };
+
+  const masks = {
+    cardNumber: [
+      /\d/,
+      /\d/,
+      /\d/,
+      /\d/,
+      ' ',
+      /\d/,
+      /\d/,
+      /\d/,
+      /\d/,
+      ' ',
+      /\d/,
+      /\d/,
+      /\d/,
+      /\d/,
+      ' ',
+      /\d/,
+      /\d/,
+      /\d/,
+      /\d/,
+    ],
+    expiry: [/\d/, /\d/, '/', /\d/, /\d/],
+    cvc: [/\d/, /\d/, /\d/],
+  };
 
   if (field.name === 'sum') {
     return (
       <div className={classes.container}>
-        <input
-          {...field}
-          placeholder={label}
-          className={classNames(classes.input, {
-            [classes.notValid]: touched && error,
-          })}
-        />
+        <input {...inputProps} />
         {touched && error && (
           <span className={classes.error}>{error.message}!</span>
         )}
       </div>
     );
   }
+
   if (isInputMask) {
     return (
       <div className={classes.container}>
-        <InputMask
-          mask={mask}
-          maskChar={null}
-          {...field}
-          placeholder={label}
-          className={classNames(classes.input, {
-            [classes.notValid]: touched && error,
-          })}
-          onFocus={() => changeFocus(field.name)}
+        <MaskedInput
+          mask={masks[maskType] || []} 
+          {...inputProps}
         />
         {touched && error && (
           <span className={classes.error}>{error.message}!</span>
@@ -43,21 +68,16 @@ const PayInput = (props) => {
       </div>
     );
   }
+
   return (
     <div className={classes.container}>
-      <input
-        {...field}
-        placeholder={label}
-        className={classNames(classes.input, {
-          [classes.notValid]: touched && error,
-        })}
-        onFocus={() => changeFocus(field.name)}
-      />
+      <input {...inputProps} />
       {touched && error && (
         <span className={classes.error}>{error.message}!</span>
       )}
     </div>
   );
-};
+});
 
 export default PayInput;
+

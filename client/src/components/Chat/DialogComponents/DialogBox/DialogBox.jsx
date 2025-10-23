@@ -1,12 +1,11 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import classNames from 'classnames';
 import styles from './DialogBox.module.sass';
-import { connect } from 'react-redux';
 import CONSTANTS from '../../../../constants';
 
 const DialogBox = (props) => {
   const {
-    chatPreview,
     userId,
     getTimeStr,
     catalogOperation,
@@ -17,6 +16,38 @@ const DialogBox = (props) => {
     onBlockToggle,
   } = props;
 
+  const { messagesPreview, optimisticStatus } = useSelector(
+    (state) => state.chatStore
+  );
+
+  const apiChatData =
+    messagesPreview.find((preview) => preview.id === props.chatPreview.id) ||
+    props.chatPreview;
+
+  const optimisticData = optimisticStatus[apiChatData.id];
+
+  let chatPreview = apiChatData;
+  if (optimisticData) {
+    const targetUserId = optimisticData.userId || userId;
+    const userIndex = apiChatData.participants.indexOf(targetUserId);
+
+    if (userIndex !== -1) {
+      chatPreview = {
+        ...apiChatData,
+        ...(optimisticData.favoriteList !== undefined && {
+          favoriteList: apiChatData.favoriteList.map((val, idx) =>
+            idx === userIndex ? optimisticData.favoriteList : val
+          ),
+        }),
+        ...(optimisticData.blackList !== undefined && {
+          blackList: apiChatData.blackList.map((val, idx) =>
+            idx === userIndex ? optimisticData.blackList : val
+          ),
+        }),
+      };
+    }
+  }
+
   const {
     text,
     id,
@@ -25,6 +56,7 @@ const DialogBox = (props) => {
     favoriteList = [],
     blackList = [],
   } = chatPreview;
+
   const userIndex = participants.indexOf(userId);
   const isFavorite = userIndex !== -1 ? favoriteList[userIndex] : false;
   const isBlocked = userIndex !== -1 ? blackList[userIndex] : false;
@@ -37,21 +69,20 @@ const DialogBox = (props) => {
     onBlockToggle(chatPreview, event);
   };
 
+  const handleGoToExpandedDialog = () => {
+    goToExpandedDialog({
+      interlocutor,
+      conversationData: {
+        participants,
+        id,
+        blackList,
+        favoriteList,
+      },
+    });
+  };
+
   return (
-    <div
-      className={styles.previewChatBox}
-      onClick={() =>
-        goToExpandedDialog({
-          interlocutor,
-          conversationData: {
-            participants,
-            id,
-            blackList,
-            favoriteList,
-          },
-        })
-      }
-    >
+    <div className={styles.previewChatBox} onClick={handleGoToExpandedDialog}>
       <img
         src={
           interlocutor.avatar === 'anon.png'
@@ -101,50 +132,4 @@ const DialogBox = (props) => {
   );
 };
 
-const mapStateToProps = (state, ownProps) => {
-  const apiChatData =
-    state.chatStore.messagesPreview.find(
-      (preview) => preview.id === ownProps.chatPreview.id
-    ) || ownProps.chatPreview;
-
-  const optimisticData = state.chatStore.optimisticStatus[apiChatData.id];
-  const userId = state.userStore.data.id;
-
-  if (!optimisticData) {
-    return {
-      chatPreview: apiChatData,
-      userId,
-    };
-  }
-
-  const targetUserId = optimisticData.userId || userId;
-  const userIndex = apiChatData.participants.indexOf(targetUserId);
-
-  if (userIndex === -1) {
-    return {
-      chatPreview: apiChatData,
-      userId,
-    };
-  }
-
-  const mergedChatPreview = {
-    ...apiChatData,
-    ...(optimisticData.favoriteList !== undefined && {
-      favoriteList: apiChatData.favoriteList.map((val, idx) =>
-        idx === userIndex ? optimisticData.favoriteList : val
-      ),
-    }),
-    ...(optimisticData.blackList !== undefined && {
-      blackList: apiChatData.blackList.map((val, idx) =>
-        idx === userIndex ? optimisticData.blackList : val
-      ),
-    }),
-  };
-
-  return {
-    chatPreview: mergedChatPreview,
-    userId,
-  };
-};
-
-export default connect(mapStateToProps)(DialogBox);
+export default DialogBox;

@@ -5,12 +5,15 @@ import Spinner from '../Spinner/Spinner';
 import CONSTANTS from '../../constants';
 import styles from '../ContestForm/ContestForm.module.sass';
 
-const OptionalSelects = (props) => {
-  if (props.isFetching) {
+const OptionalSelects = ({ isFetching, contestType, dataForContest }) => {
+  if (isFetching) {
     return <Spinner />;
   }
-  switch (props.contestType) {
-    case CONSTANTS.NAME_CONTEST: {
+
+  const { data } = dataForContest;
+
+  switch (contestType) {
+    case CONSTANTS.NAME_CONTEST:
       return (
         <>
           <SelectInput
@@ -22,7 +25,7 @@ const OptionalSelects = (props) => {
               selectInput: styles.select,
               warning: styles.warning,
             }}
-            optionsArray={props.dataForContest.data.typeOfName}
+            optionsArray={data.typeOfName}
           />
           <SelectInput
             name="styleName"
@@ -33,12 +36,12 @@ const OptionalSelects = (props) => {
               selectInput: styles.select,
               warning: styles.warning,
             }}
-            optionsArray={props.dataForContest.data.nameStyle}
+            optionsArray={data.nameStyle}
           />
         </>
       );
-    }
-    case CONSTANTS.LOGO_CONTEST: {
+
+    case CONSTANTS.LOGO_CONTEST:
       return (
         <>
           <div className={styles.inputContainer}>
@@ -58,19 +61,19 @@ const OptionalSelects = (props) => {
           </div>
           <SelectInput
             name="brandStyle"
+            header="Brand Style"
             classes={{
               inputContainer: styles.selectInputContainer,
               inputHeader: styles.selectHeader,
               selectInput: styles.select,
               warning: styles.warning,
             }}
-            header="Brand Style"
-            optionsArray={props.dataForContest.data.brandStyle}
+            optionsArray={data.brandStyle}
           />
         </>
       );
-    }
-    case CONSTANTS.TAGLINE_CONTEST: {
+
+    case CONSTANTS.TAGLINE_CONTEST:
       return (
         <>
           <div className={styles.inputContainer}>
@@ -90,18 +93,20 @@ const OptionalSelects = (props) => {
           </div>
           <SelectInput
             name="typeOfTagline"
+            header="Type tagline"
             classes={{
               inputContainer: styles.selectInputContainer,
               inputHeader: styles.selectHeader,
               selectInput: styles.select,
               warning: styles.warning,
             }}
-            header="Type tagline"
-            optionsArray={props.dataForContest.data.typeOfTagline}
+            optionsArray={data.typeOfTagline}
           />
         </>
       );
-    }
+
+    default:
+      return null;
   }
 };
 

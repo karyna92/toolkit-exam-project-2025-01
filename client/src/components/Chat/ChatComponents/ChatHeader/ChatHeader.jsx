@@ -1,25 +1,58 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import classNames from 'classnames';
 import { backToDialogList } from '../../../../store/slices/chatSlice';
 import styles from './ChatHeader.module.sass';
 import CONSTANTS from '../../../../constants';
 
-const ChatHeader = (props) => {
-  const { avatar, firstName } = props.interlocutor;
-  const {
-    backToDialogList,
-    chatData,
-    userId,
-    onFavoriteToggle,
-    onBlockToggle,
-  } = props;
+const ChatHeader = ({ onFavoriteToggle, onBlockToggle }) => {
+  const dispatch = useDispatch();
+
+  const { interlocutor, chatData, optimisticStatus } = useSelector(
+    (state) => state.chatStore
+  );
+  const userId = useSelector((state) => state.userStore.data.id);
+
+  const handleBackToDialogList = () => {
+    dispatch(backToDialogList());
+  };
 
   let isFavorite = false;
   let isBlocked = false;
 
-  if (chatData && chatData.participants) {
-    const { participants, favoriteList = [], blackList = [] } = chatData;
+  let processedChatData = chatData;
+
+  if (chatData && optimisticStatus && chatData.id) {
+    const optimisticData = optimisticStatus[chatData.id];
+
+    if (optimisticData) {
+      processedChatData = {
+        ...chatData,
+        favoriteList: [...(chatData.favoriteList || [])],
+        blackList: [...(chatData.blackList || [])],
+      };
+
+      const targetUserId = optimisticData.userId || userId;
+      const userIndex = chatData.participants.indexOf(targetUserId);
+
+      if (userIndex !== -1) {
+        if (optimisticData.favoriteList !== undefined) {
+          processedChatData.favoriteList[userIndex] =
+            optimisticData.favoriteList;
+        }
+        if (optimisticData.blackList !== undefined) {
+          processedChatData.blackList[userIndex] = optimisticData.blackList;
+        }
+      }
+    }
+  }
+
+  if (processedChatData && processedChatData.participants) {
+    const {
+      participants,
+      favoriteList = [],
+      blackList = [],
+    } = processedChatData;
     const userIndex = participants.indexOf(userId);
     isFavorite = userIndex !== -1 ? favoriteList[userIndex] : false;
     isBlocked = userIndex !== -1 ? blackList[userIndex] : false;
@@ -27,20 +60,19 @@ const ChatHeader = (props) => {
 
   const handleFavoriteClick = (event) => {
     event.stopPropagation();
-    onFavoriteToggle(chatData, event);
+    onFavoriteToggle(processedChatData, event);
   };
 
   const handleBlockClick = (event) => {
     event.stopPropagation();
-    onBlockToggle(chatData, event);
+    onBlockToggle(processedChatData, event);
   };
+
+  const { avatar, firstName } = interlocutor;
 
   return (
     <div className={styles.chatHeader}>
-      <div
-        className={styles.buttonContainer}
-        onClick={() => backToDialogList()}
-      >
+      <div className={styles.buttonContainer} onClick={handleBackToDialogList}>
         <img
           src={`${CONSTANTS.STATIC_IMAGES_PATH}arrow-left-thick.png`}
           alt="back"
@@ -58,7 +90,7 @@ const ChatHeader = (props) => {
           />
           <span>{firstName}</span>
         </div>
-        {chatData && (
+        {processedChatData && (
           <div>
             <i
               onClick={handleFavoriteClick}
@@ -83,50 +115,4 @@ const ChatHeader = (props) => {
   );
 };
 
-const mapStateToProps = (state) => {
-  const { interlocutor, chatData, optimisticStatus } = state.chatStore;
-  const userId = state.userStore.data.id;
-
-  if (!chatData) {
-    return { interlocutor, chatData, userId };
-  }
-
-  const optimisticData = optimisticStatus[chatData.id];
-
-  if (!optimisticData) {
-    return { interlocutor, chatData, userId };
-  }
-
-  const targetUserId = optimisticData.userId || userId;
-  const userIndex = chatData.participants.indexOf(targetUserId);
-
-  if (userIndex === -1) {
-    return { interlocutor, chatData, userId };
-  }
-
-  const mergedChatData = {
-    ...chatData,
-    favoriteList: [...(chatData.favoriteList || [])],
-    blackList: [...(chatData.blackList || [])],
-  };
-
-  if (optimisticData.favoriteList !== undefined) {
-    mergedChatData.favoriteList[userIndex] = optimisticData.favoriteList;
-  }
-
-  if (optimisticData.blackList !== undefined) {
-    mergedChatData.blackList[userIndex] = optimisticData.blackList;
-  }
-
-  return {
-    interlocutor,
-    chatData: mergedChatData,
-    userId,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => ({
-  backToDialogList: () => dispatch(backToDialogList()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ChatHeader);
+export default ChatHeader;

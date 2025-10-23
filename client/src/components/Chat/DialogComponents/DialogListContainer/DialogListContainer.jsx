@@ -1,39 +1,24 @@
-import React from 'react';
-import { connect } from 'react-redux';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { getPreviewChat } from '../../../../store/slices/chatSlice';
 import DialogList from '../DialogList/DialogList';
 
-class DialogListContainer extends React.Component {
-  componentDidMount() {
-    this.props.getChatPreview();
-  }
+const DialogListContainer = ({ userId, onFavoriteToggle, onBlockToggle }) => {
+  const dispatch = useDispatch();
+  const { messagesPreview } = useSelector((state) => state.chatStore);
 
-  componentDidUpdate(prevProps) {
-    if (prevProps.someProp !== this.props.someProp) {
-    }
-  }
+  useEffect(() => {
+    dispatch(getPreviewChat());
+  }, [dispatch]);
 
-  render() {
-    const { messagesPreview, userId, onFavoriteToggle, onBlockToggle } =
-      this.props;
-    return (
-      <DialogList
-        preview={messagesPreview}
-        userId={userId}
-        onFavoriteToggle={onFavoriteToggle}
-        onBlockToggle={onBlockToggle}
-      />
-    );
-  }
-}
+  return (
+    <DialogList
+      preview={messagesPreview}
+      userId={userId}
+      onFavoriteToggle={onFavoriteToggle}
+      onBlockToggle={onBlockToggle}
+    />
+  );
+};
 
-const mapStateToProps = (state) => state.chatStore;
-
-const mapDispatchToProps = (dispatch) => ({
-  getChatPreview: () => dispatch(getPreviewChat()),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(DialogListContainer);
+export default DialogListContainer;
