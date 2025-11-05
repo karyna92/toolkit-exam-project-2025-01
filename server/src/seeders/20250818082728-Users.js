@@ -16,8 +16,6 @@ module.exports = {
         role: 'customer',
         balance: 100,
         rating: 4.5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       },
       {
         firstName: 'Alice',
@@ -29,8 +27,6 @@ module.exports = {
         role: 'creator',
         balance: 200,
         rating: 5,
-        createdAt: new Date(),
-        updatedAt: new Date(),
       },
     ]);
   },
