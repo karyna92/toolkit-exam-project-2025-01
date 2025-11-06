@@ -10,6 +10,14 @@ echo "-----> Provisioning containers"
 docker compose --file docker-compose-dev.yaml up -d
 echo ""
 
+echo "-----> Waiting for database to be ready..."
+until docker compose --file docker-compose-dev.yaml exec db-dev pg_isready -U postgres -h localhost &>/dev/null; do
+  printf "."
+  sleep 5
+done
+echo ""
+echo "Database is ready!"
+
 echo "-----> Waiting for server-dev to be ready..."
 until docker compose --file docker-compose-dev.yaml exec -T server-dev true &>/dev/null; do
   printf "."
