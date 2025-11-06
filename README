@@ -28,6 +28,18 @@ chmod +x start-dev.sh
 sudo bash start-dev.sh
 
 ---
+## Database Setup
+
+The startup script automatically handles PostgreSQL enum synchronization issues. 
+If you encounter any problems:
+
+```bash
+# Full clean restart 
+docker compose -f docker-compose-dev.yaml down
+docker volume rm toolkit-exam-project-2025-01_postgres-data
+./start-dev.sh
+
+---
 
 🌐 Access Points
 
