@@ -11,7 +11,6 @@ const Pagination = ({
   if (!totalPages || totalPages <= 1) {
     return null;
   }
-
   const generatePageNumbers = () => {
     const pages = [];
 

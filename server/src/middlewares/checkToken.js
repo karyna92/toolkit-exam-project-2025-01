@@ -33,10 +33,7 @@ module.exports.checkAuth = async (req, res, next) => {
 };
 
 module.exports.checkToken = async (req, res, next) => {
-  // const accessToken = req.headers.authorization;
-  // // console.log('req', req);
-  // console.log('accessToken:', accessToken);
-  // if (!accessToken) return next(new TokenError('Token is required'));
+
   const authHeader = req.headers.authorization;
   console.log('authHeader', authHeader);
   if (!authHeader) return next(new TokenError('Token is required'));

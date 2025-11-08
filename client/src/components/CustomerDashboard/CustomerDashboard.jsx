@@ -17,16 +17,18 @@ const CustomerDashboard = ({ navigate }) => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
 
-  const { contests, customerFilter, error, isFetching, haveMore } = useSelector(
-    (state) => ({
-      contests: state.contestsList.contests,
-      customerFilter: state.contestsList.customerFilter,
-      error: state.contestsList.error,
-      isFetching: state.contestsList.isFetching,
-      haveMore: state.contestsList.haveMore,
-    }),
-    shallowEqual
-  );
+  const { contests, customerFilter, error, isFetching, haveMore, totalCount } =
+    useSelector(
+      (state) => ({
+        contests: state.contestsList.contests,
+        customerFilter: state.contestsList.customerFilter,
+        error: state.contestsList.error,
+        isFetching: state.contestsList.isFetching,
+        haveMore: state.contestsList.haveMore,
+        totalCount: state.contestsList.totalCount,
+      }),
+      shallowEqual
+    );
 
   const getContestsData = useCallback(
     (page = 1) => {
@@ -40,7 +42,7 @@ const CustomerDashboard = ({ navigate }) => {
           requestData: {
             limit,
             offset,
-            contestStatus: customerFilter,
+            status: customerFilter, 
           },
           role: CONSTANTS.CUSTOMER,
         })
@@ -69,10 +71,7 @@ const CustomerDashboard = ({ navigate }) => {
 
   useEffect(() => {
     getContestsData(1);
-    return () => {
-      dispatch(clearContestsList());
-    };
-  }, [dispatch]);
+  }, [dispatch, customerFilter]);
 
   const renderContests = () =>
     contests.map((contest, i) => (
@@ -83,7 +82,7 @@ const CustomerDashboard = ({ navigate }) => {
       />
     ));
 
-  const totalPages = haveMore ? currentPage + 1 : currentPage;
+  const totalPages = totalCount ? Math.ceil(totalCount / 5) : 1;
 
   return (
     <div className={styles.mainContainer}>

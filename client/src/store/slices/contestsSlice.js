@@ -19,7 +19,7 @@ const initialState = {
   },
   haveMore: true,
   totalCount: 1,
-  totalPages:1,
+  totalPages: 1,
 };
 
 export const getContests = decorateAsyncThunk({
@@ -37,6 +37,8 @@ const reducers = {
   clearContestsList: (state) => {
     state.error = null;
     state.contests = [];
+    state.haveMore = true;
+    state.totalCount = 1;
   },
   setNewCustomerFilter: (state, { payload }) => ({
     ...initialState,
@@ -54,7 +56,7 @@ const extraReducers = (builder) => {
   builder.addCase(getContests.pending, pendingReducer);
   builder.addCase(getContests.fulfilled, (state, { payload }) => {
     state.isFetching = false;
-    state.contests = [...state.contests, ...payload.contests];
+    state.contests = payload.contests;
     state.haveMore = payload.haveMore;
     state.totalCount = payload.totalCount;
     state.totalPages = payload.totalPages;

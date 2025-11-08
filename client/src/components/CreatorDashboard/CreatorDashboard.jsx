@@ -41,10 +41,8 @@ const CreatorDashboard = () => {
     (state) => state.contestsList.creatorFilter
   );
   const error = useSelector((state) => state.contestsList.error);
-  const haveMore = useSelector((state) => state.contestsList.haveMore);
-  const isFetchingData = useSelector(
-    (state) => state.dataForContest.isFetching
-  );
+  const totalCount = useSelector((state) => state.contestsList.totalCount);
+  const isFetching = useSelector((state) => state.contestsList.isFetching);
   const dataForContest = useSelector((state) => state.dataForContest.data);
 
   const getContestsData = useCallback(
@@ -193,13 +191,7 @@ const CreatorDashboard = () => {
     }
   }, [location.search, isInitialized]);
 
-  useEffect(() => {
-    if (isInitialized) {
-      parseUrlForParams(location.search);
-    }
-  }, [location.search, isInitialized]);
-
-  const totalPages = haveMore ? currentPage + 1 : currentPage;
+  const totalPages = totalCount ? Math.ceil(totalCount / 5) : 1;
 
   if (!isInitialized) {
     return <div>Loading...</div>;
@@ -266,7 +258,7 @@ const CreatorDashboard = () => {
       ) : (
         <div className={styles.paginatedWrapper}>
           <ContestsContainer
-            isFetching={isFetchingData}
+            isFetching={isFetching}
             haveMore={false}
             loadMore={() => {}}
           >

@@ -15,7 +15,7 @@ class Footer extends Component {
             href="https://google.com"
             onClick={(e) => {
               e.preventDefault();
-              if (i === 'How It Works?') {
+              if (i === 'How It Works') {
                 navigate('/information');
               } else {
                 window.location.href = 'https://google.com';

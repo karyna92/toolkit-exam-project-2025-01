@@ -20,9 +20,9 @@ export const downloadContestFile = (data) =>
   http.get(`contests${data.contestId}/files/${data.fileName}`);
 export const getContestById = ({ contestId }) =>
   http.get(`contests/${contestId}`);
-export const getCustomersContests = ({ limit, offset, contestStatus }) =>
+export const getCustomersContests = ({ limit, offset, status}) =>
   http.get('contests/customer', {
-    params: { limit, offset, status: contestStatus },
+    params: { limit, offset, status },
   });
 
 export const getActiveContests = ({
@@ -31,6 +31,8 @@ export const getActiveContests = ({
   industry,
   awardSort,
   ownEntries,
+  limit,
+  offset,
   page,
 }) =>
   http.get('contests', {
@@ -41,6 +43,8 @@ export const getActiveContests = ({
       awardSort,
       ownEntries,
       page,
+      limit,
+      offset,
     },
   });
 

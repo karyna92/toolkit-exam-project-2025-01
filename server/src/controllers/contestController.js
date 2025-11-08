@@ -10,12 +10,14 @@ const CONSTANTS = require('../constants');
 module.exports.dataForContest = async (req, res, next) => {
   const response = {};
   try {
-    const {
-      body: { characteristic1, characteristic2 },
-    } = req;
+    const { body } = req;
+  
+    const characteristic1 = body?.characteristic1 || '';
+    const characteristic2 = body?.characteristic2 || '';
+
     const types = [characteristic1, characteristic2, 'industry'].filter(
       Boolean
-    );
+    )
 
     const characteristics = await db.Selects.findAll({
       where: {
@@ -24,6 +26,7 @@ module.exports.dataForContest = async (req, res, next) => {
         },
       },
     });
+
     if (!characteristics) {
       return next(new ServerError());
     }
@@ -116,33 +119,39 @@ module.exports.getContests = async (req, res, next) => {
       awardSort
     );
 
-    const contests = await db.Contests.findAll({
-      where: predicates.where,
-      order: predicates.order,
-      limit: parsedLimit,
-      offset: parsedOffset,
-      include: [
-        {
-          model: db.Offers,
-          required: ownEntries,
-          where: ownEntries ? { userId: req.tokenData.userId } : {},
-          attributes: ['id'],
-        },
-      ],
-    });
-
-    contests.forEach(
-      (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
-    );
-
     const totalCount = await db.Contests.count({
       where: predicates.where,
     });
 
+    const contests = await db.Contests.findAll({
+      where: predicates.where,
+      order: [['prize', 'asc'], ['id', 'DESC']],
+      limit: parsedLimit,
+      offset: parsedOffset,
+    });
+
+    const contestsWithOffers = await Promise.all(
+      contests.map(async (contest) => {
+        const offers = await db.Offers.findAll({
+          where: {
+            contestId: contest.id,
+            ...(ownEntries ? { userId: req.tokenData.userId } : {}),
+          },
+          attributes: ['id'],
+        });
+
+        return {
+          ...contest.dataValues,
+          Offers: offers,
+          count: offers.length,
+        };
+      })
+    );
+
     const haveMore = parsedOffset + parsedLimit < totalCount;
 
     res.send({
-      contests,
+      contests: contestsWithOffers,
       haveMore,
       totalCount,
       currentPage: Math.floor(parsedOffset / parsedLimit) + 1,
@@ -156,20 +165,33 @@ module.exports.getContests = async (req, res, next) => {
 
 module.exports.getCustomersContests = async (req, res, next) => {
   try {
-    const { status } = req.query;
-    const { limit = 5, offset = 0 } = req.query;
+    const {
+      status,
+      limit = 5,
+      offset = 0,
+    } = req.query;
 
-    if (!status)
+    if (!status) {
       return next(new BadRequestError('Status query param required'));
+    }
 
     const parsedLimit = parseInt(limit);
     const parsedOffset = parseInt(offset);
 
+    const whereClause = {
+      status: status,
+      userId: req.tokenData.userId 
+    };
+
+    const totalCount = await db.Contests.count({
+      where: whereClause,
+    });
+
     const contests = await db.Contests.findAll({
-      where: { status, userId: req.tokenData.userId },
+      where: whereClause,
+      order: [['id', 'DESC']], 
       limit: parsedLimit,
       offset: parsedOffset,
-      order: [['id', 'DESC']],
       include: [
         {
           model: db.Offers,
@@ -191,10 +213,6 @@ module.exports.getCustomersContests = async (req, res, next) => {
       (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
     );
 
-    const totalCount = await db.Contests.count({
-      where: { status, userId: req.tokenData.userId },
-    });
-
     const haveMore = parsedOffset + parsedLimit < totalCount;
 
     res.send({
@@ -205,7 +223,8 @@ module.exports.getCustomersContests = async (req, res, next) => {
       totalPages: Math.ceil(totalCount / parsedLimit),
     });
   } catch (err) {
-    next(new ServerError(err));
+    console.error(err);
+    next(new ServerError('Failed to fetch customer contests'));
   }
 };
 
