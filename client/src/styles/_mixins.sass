@@ -1,0 +1,42 @@
+@mixin container($padding-horizontal: min(13rem, 12%))
+  padding: 5.5rem $padding-horizontal
+
+@mixin subContainer()
+  margin: 6rem auto
+
+@mixin flex-center($direction: row)
+  display: flex
+  flex-direction: $direction
+  justify-content: center
+  align-items: center
+
+@mixin gradient-bg($direction: to right, $color1: $gradient-color1, $color2: $gradient-color2)
+  background: linear-gradient($direction, $color1, $color2)
+
+@mixin card-style($bg-color: $white)
+  padding: 1.25rem
+  border: 1px solid #eee
+  border-radius: $card-border-radius
+  background: $bg-color
+  transition: transform $transition-fast
+
+@mixin button-style($bg-color: $primary-blue, $text-color: $white, $hover-effect: true)
+  background: $bg-color
+  color: $text-color
+  border: none
+  border-radius: $button-border-radius
+  padding: $button-padding
+  cursor: pointer
+  font-weight: 600
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  gap: 0.5rem
+  position: relative
+  transition: all $transition-medium
+
+  @if $hover-effect
+    &:hover
+      background: linear-gradient(to left, #3ea9f5, #2888d2)
+      .cardButtonArrow
+        left: 0.5rem

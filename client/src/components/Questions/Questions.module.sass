@@ -1,0 +1,76 @@
+@import '../../styles/variables'
+@import '../../styles/mixins'
+
+.faqSection
+  scroll-margin-top: 50px
+  max-width: 850px
+
+  h2
+    color: $primary-blue
+    margin: 1.75rem 0
+    font-weight: 600
+    font-size: 28px
+
+.questionItem
+  position: relative
+  width: 100%
+  border: 1px solid #d0daee50
+  border-radius: 1.1rem
+  margin: 1.75rem 0
+  display: flex
+  flex-direction: column
+  overflow: hidden
+  transition: all 0.5s ease
+
+  p
+    font-size: 1.2rem
+    font-weight: 600
+
+  span
+    font-size: 1.7rem
+    color: #4e618d
+
+  &:hover
+    border: 1px solid #3972ef
+    background-color: #c9d7f663
+
+  &.open
+    background-color: $primary-blue
+    border-color: $primary-blue
+    color: #fff
+
+    p,
+    span
+      color: #fff
+
+.answerWrapper
+  max-height: 0
+  overflow: hidden
+  transition: max-height 0.9s ease
+
+  &.open
+    max-height: 500px
+
+.question
+  display: flex
+  justify-content: space-between
+  align-items: center
+  border-radius: 1.1rem
+  padding: 1.25rem 1.5rem
+  transition: all 0.7s ease
+
+  &.open
+    background-color: $primary-blue
+    border-color: $primary-blue
+    color: #fff
+
+.answer
+  margin-top: 10px
+  color: #fff
+  opacity: 1
+  padding: 0 1.25rem 1.5rem
+  transition: all 0.9s ease
+
+  &.open
+    opacity: 1
+

@@ -1,18 +1,25 @@
+const cron = require('node-cron');
 const backupLogs = require('./backupLogs');
+const { logError } = require('./errorLogger');
 
 function scheduleDailyBackup(hour = 23, minute = 59) {
-  const now = new Date();
-  let next = new Date();
-  next.setHours(hour, minute, 0, 0);
-  if (next <= now) {
-    next.setDate(next.getDate() + 1);
-  }
-  const delay = next - now;
+  const cronExpression = `${minute} ${hour} * * *`;
 
-  setTimeout(() => {
-    backupLogs().catch(console.error);
-    setInterval(() => backupLogs().catch(console.error), 24 * 60 * 60 * 1000);
-  }, delay);
+  cron.schedule(
+    cronExpression,
+    async () => {
+      try {
+        await backupLogs();
+      } catch (err) {
+        logError(err);
+      }
+    },
+    {
+      timezone: 'Europe/Kiev',
+    }
+  );
 }
 
 scheduleDailyBackup();
+
+module.exports = scheduleDailyBackup;

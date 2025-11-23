@@ -1,49 +1,70 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const LOCAL_STORAGE_KEY = 'eventsState';
-
-const loadState = () => {
-  try {
-    const serialized = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (!serialized) return null;
-    const parsed = JSON.parse(serialized);
-
-    const now = Date.now();
-    parsed.ongoingEvents = parsed.ongoingEvents.filter(
-      (e) => now - new Date(e.dateTime).getTime() < 24 * 60 * 60 * 1000
-    );
-    parsed.events = parsed.events.filter(
-      (e) => now - new Date(e.dateTime).getTime() < 24 * 60 * 60 * 1000
-    );
-    return parsed;
-  } catch (e) {
-    console.error('Failed to load events from localStorage', e);
-    return null;
-  }
-};
-
-const saveState = (state) => {
-  try {
-    const serialized = JSON.stringify(state);
-    localStorage.setItem(LOCAL_STORAGE_KEY, serialized);
-  } catch (e) {
-    console.error('Failed to save events to localStorage', e);
-  }
-};
-
-const initialState = loadState() || {
+const initialState = {
   events: [],
   ongoingEvents: [],
-  hasSeenOngoingEvents: false,
+  seenEventIds: [], 
+};
+
+const cleanOldEvents = (events) => {
+  const now = Date.now();
+  return events.filter(
+    (e) => now - new Date(e.dateTime).getTime() < 24 * 60 * 60 * 1000
+  );
+};
+
+export const checkForOngoingEvents = () => (dispatch, getState) => {
+  const state = getState().events;
+  const now = new Date();
+
+  state.events.forEach((event) => {
+    const eventTime = new Date(event.dateTime);
+    const remindBeforeMs = (event.remindBefore || 0) * 60 * 1000;
+    const notifyTime = new Date(eventTime.getTime() - remindBeforeMs);
+
+    if (
+      now >= notifyTime &&
+      !state.ongoingEvents.find((e) => e.id === event.id)
+    ) {
+      dispatch(addOngoingEvent({ ...event, notify: true }));
+    }
+  });
+};
+
+export const loadEventsForUser = (userId) => (dispatch) => {
+  if (!userId) return;
+
+  try {
+    const serialized = localStorage.getItem(`eventsState_${userId}`);
+    if (!serialized) return;
+
+    const parsed = JSON.parse(serialized);
+
+    const cleanedEvents = cleanOldEvents(parsed.events || []);
+    const cleanedOngoingEvents = cleanOldEvents(parsed.ongoingEvents || []);
+
+    dispatch(
+      setEventsState({
+        events: cleanedEvents,
+        ongoingEvents: cleanedOngoingEvents,
+        seenEventIds: parsed.seenEventIds || [], 
+      })
+    );
+
+    dispatch(checkForOngoingEvents());
+  } catch (e) {
+    console.error('Failed to load events from localStorage', e);
+  }
 };
 
 const eventsSlice = createSlice({
   name: 'events',
   initialState,
   reducers: {
-    setEvents(state, action) {
-      state.events = action.payload;
-      saveState(state);
+    setEventsState(state, action) {
+      state.events = action.payload.events || [];
+      state.ongoingEvents = action.payload.ongoingEvents || [];
+      state.seenEventIds = action.payload.seenEventIds || [];
     },
     addEvent(state, action) {
       const event = {
@@ -52,13 +73,12 @@ const eventsSlice = createSlice({
       };
       state.events.push(event);
       state.events.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-      saveState(state);
     },
     deleteEvent(state, action) {
       const id = action.payload;
       state.events = state.events.filter((e) => e.id !== id);
       state.ongoingEvents = state.ongoingEvents.filter((e) => e.id !== id);
-      saveState(state);
+      state.seenEventIds = state.seenEventIds.filter((seenId) => seenId !== id);
     },
     addOngoingEvent(state, action) {
       if (!state.ongoingEvents.find((e) => e.id === action.payload.id)) {
@@ -66,23 +86,39 @@ const eventsSlice = createSlice({
           ...action.payload,
           dateTime: new Date(action.payload.dateTime).toISOString(),
         });
-        state.hasSeenOngoingEvents = false;
-        saveState(state);
       }
     },
-    markOngoingEventsAsSeen(state) {
-      state.hasSeenOngoingEvents = true;
-      saveState(state);
+    markEventAsSeen(state, action) {
+      const eventId = action.payload;
+      if (!state.seenEventIds.includes(eventId)) {
+        state.seenEventIds.push(eventId);
+      }
+    },
+    markAllOngoingEventsAsSeen(state) {
+      state.ongoingEvents.forEach((event) => {
+        if (!state.seenEventIds.includes(event.id)) {
+          state.seenEventIds.push(event.id);
+        }
+      });
+    },
+    cleanupSeenEvents(state) {
+      state.seenEventIds = state.seenEventIds.filter(
+        (seenId) =>
+          state.events.some((event) => event.id === seenId) ||
+          state.ongoingEvents.some((event) => event.id === seenId)
+      );
     },
   },
 });
 
 export const {
-  setEvents,
+  setEventsState,
   addEvent,
   deleteEvent,
   addOngoingEvent,
-  markOngoingEventsAsSeen,
+  markEventAsSeen,
+  markAllOngoingEventsAsSeen,
+  cleanupSeenEvents,
 } = eventsSlice.actions;
 
 export default eventsSlice.reducer;

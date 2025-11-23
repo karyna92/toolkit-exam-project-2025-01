@@ -16,3 +16,13 @@ module.exports = {
   LOG_PATH,
   ARCHIVE_DIR,
 };
+
+  // "development": {
+  //   "username": "postgres",
+  //   "password": "password",
+  //   "database": "squad-help-dev",
+  //   "host": "db-dev",
+  //   "port": 5432,
+  //   "dialect": "postgres",
+  //   "seederStorage": "sequelize"
+  // },

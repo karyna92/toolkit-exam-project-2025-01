@@ -1,32 +1,51 @@
-.errorContainer
-  width: auto
-  align-self: center
+.errorContainer 
+  padding: 16px
+  margin: 16px 0
+  border-radius: 8px
+  border-left: 4px solid
+
+.bankError 
+  background-color: #fff5f5
+  border-color: #e53e3e
+  color: #c53030
+
+.clientError 
+  background-color: #fffaf0
+  border-color: #dd6b20
+  color: #c05621
+
+.serverError 
+  background-color: #f0fff4
+  border-color: #38a169
+  color: #2d774a
+
+.errorContent 
   display: flex
-  flex-direction: row
-  justify-content: center
-  align-items: center
-  border-radius: 26px
-  padding: 15px 10px
-  background-color: red
-  position: relative
+  flex-direction: column
+  gap: 8px
+
+.errorHeader 
+  font-weight: bold
+  font-size: 16px
+
+.errorMessage 
+  font-size: 14px
+  line-height: 1.4
+
+.closeButton 
+  align-self: flex-end
+  background: none
+  border: none
   cursor: pointer
+  display: flex
+  align-items: center
+  gap: 4px
+  color: inherit
+  opacity: 0.7
+  transition: opacity 0.2s
 
-  span
-    font-size: 16px
-    color: white
+.closeButton:hover 
+  opacity: 1
 
-  i
-    color: white
-    font-size: 26px
-    position: absolute
-    cursor: pointer
-    top: -4px
-    right: -4px
-    transition: font-size 0.2s
-
-    &:hover
-      top: -8px
-      right: -8px
-      color: #4e618d
-      font-size: 32px
-      transition: font-size 0.2s
+.closeText 
+  font-size: 12px

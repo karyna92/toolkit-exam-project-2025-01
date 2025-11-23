@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import EventForm from '../../components/Events/EventForm';
 import EventList from '../../components/Events/EventList';
@@ -7,12 +7,11 @@ import {
   addEvent as addEventAction,
   deleteEvent as deleteEventAction,
   addOngoingEvent as addOngoingEventAction,
-  markOngoingEventsAsSeen as markOngoingEventsAsSeenAction,
+  markEventAsSeen as markOngoingEventsAsSeenAction,
 } from '../../store/slices/eventsSlice';
 
 const Events = () => {
   const dispatch = useDispatch();
-
   const events = useSelector((state) => state.events.events);
   const ongoingEvents = useSelector((state) => state.events.ongoingEvents);
 
@@ -22,13 +21,34 @@ const Events = () => {
     }
   }, [ongoingEvents, dispatch]);
 
+  const handleAdd = useCallback(
+    (event) => {
+      dispatch(addEventAction(event));
+    },
+    [dispatch]
+  );
+
+  const handleNotify = useCallback(
+    (event) => {
+      dispatch(addOngoingEventAction(event));
+    },
+    [dispatch]
+  );
+
+  const handleDelete = useCallback(
+    (eventId) => {
+      dispatch(deleteEventAction(eventId));
+    },
+    [dispatch]
+  );
+
   return (
     <div className={styles.eventsContainer}>
-      <EventForm onAdd={(event) => dispatch(addEventAction(event))} />
+      <EventForm onAdd={handleAdd} />
       <EventList
         events={events}
-        handleNotify={(event) => dispatch(addOngoingEventAction(event))}
-        onDelete={(eventId) => dispatch(deleteEventAction(eventId))}
+        handleNotify={handleNotify}
+        onDelete={handleDelete}
       />
     </div>
   );

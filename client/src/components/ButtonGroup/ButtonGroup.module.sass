@@ -1,14 +1,16 @@
-.matchingDomain
-  max-width:900px  
-  margin: 2rem 0
+@import '../../styles/variables'
+@import '../../styles/mixins'
 
+.buttonGroup
+  max-width: 900px
+  margin: 2rem 0
   h2
-    margin: 1rem 0
     font-size: 19px
     font-weight: 600
-    color:#585859
+    color: $ui-text-medium
 
 .options
+  margin: 1.3rem 0 
   box-sizing: border-box
   display: flex
   flex-direction: row
@@ -17,24 +19,28 @@
   .btn
     position: relative
     min-width: 150px
-    border: 2px solid #d0d0d0;
+    border: 2px solid $card-border
     padding: 2rem
     border-radius: 9px
     cursor: pointer
-    background: white
+    background: $white
     text-align: start
     z-index: 0
-    color:#6d6d6d
+    color: $ui-text-light
+    transition: all $transition-fast
 
     h3
       font-weight: 600
       margin-bottom: 8px
 
-    &.activeTab
-      color: #3d3c3c 
-      outline: 1.5px solid #28d2d1
-      outline-offset: -1px
+    &:hover
+      border-color: darken($card-border, 10%)
 
+    &.activeTab
+      color: $ui-text-dark 
+      outline: 1.5px solid $button-active
+      outline-offset: -1px
+      border-color: $button-active
 
 .subtitle
   position: absolute
@@ -42,11 +48,12 @@
   transform: translateX(-50%) 
   top: -12px          
   font-size: 12px
-  background: #deeafe
-  color: #3ea9f5
+  background: $badge-bg
+  color: $primary-blue
   padding: 4px 7px
   border-radius: 12px
   z-index: 10
+  white-space: nowrap
 
 .check
   position: absolute
@@ -56,3 +63,19 @@
   height: 25px
   object-fit: contain
   z-index: 2
+
+@media (max-width: $tablet)
+  .options
+    flex-direction: column
+    gap: 15px
+
+  .btn
+    min-width: 100% !important
+
+@media (max-width: $mobile)
+  .buttonGroup
+    margin: 1rem 0
+
+  .btn
+    padding: 1.5rem !important
+

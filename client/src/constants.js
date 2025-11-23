@@ -1,7 +1,8 @@
 const env = process.env.NODE_ENV || 'development';
 const serverIP = 'localhost';
-const serverPort = 3002;
-const CONSTANS ={
+// const serverPort = 3002;
+const serverPort = 3000;
+const CONSTANS = {
   CONTACTS: {
     TEL: '(877)355-3585',
   },
@@ -145,4 +146,4 @@ const CONSTANS ={
   },
 };
 
-export default CONSTANS
+export default CONSTANS;

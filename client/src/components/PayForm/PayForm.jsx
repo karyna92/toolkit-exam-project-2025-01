@@ -8,15 +8,22 @@ import Schems from '../../utils/validators/validationSchems';
 import styles from './PayForm.module.sass';
 import 'react-credit-cards-2/dist/es/styles-compiled.css';
 
-const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
+const PayForm = ({
+  focusOnElement,
+  isPayForOrder,
+  sendRequest,
+  back,
+  isSubmitting,
+}) => {
   const dispatch = useDispatch();
 
   const handleFocusChange = (name) => {
     dispatch(changeFocusOnCard(name));
   };
 
-  const handlePay = (values) => {
+  const handlePay = (values, { setSubmitting }) => {
     sendRequest(values);
+    setSubmitting(false);
   };
 
   return (
@@ -34,8 +41,10 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
         }}
         onSubmit={handlePay}
         validationSchema={Schems.PaymentSchema}
+        validateOnChange={true}
+        validateOnBlur={true}
       >
-        {({ values }) => {
+        {({ values, errors, touched, isValid, dirty }) => {
           const { name, number, expiry, cvc, sum } = values;
 
           return (
@@ -52,11 +61,11 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
 
               <Form id="myForm" className={styles.formContainer}>
                 <div className={styles.bigInput}>
-                  <span>Name</span>
+                  <span>Cardholder Name</span>
                   <PayInput
                     name="name"
                     type="text"
-                    label="Name"
+                    label="Cardholder Name"
                     changeFocus={handleFocusChange}
                     classes={{
                       container: styles.inputContainer,
@@ -65,6 +74,9 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
                       error: styles.error,
                     }}
                   />
+                  {touched.name && errors.name && (
+                    <div className={styles.fieldError}>{errors.name}</div>
+                  )}
                 </div>
 
                 {!isPayForOrder && (
@@ -100,6 +112,9 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
                       error: styles.error,
                     }}
                   />
+                  {touched.number && errors.number && (
+                    <div className={styles.fieldError}>{errors.number}</div>
+                  )}
                 </div>
 
                 <div className={styles.smallInputContainer}>
@@ -119,6 +134,9 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
                         error: styles.error,
                       }}
                     />
+                    {touched.expiry && errors.expiry && (
+                      <div className={styles.fieldError}>{errors.expiry}</div>
+                    )}
                   </div>
 
                   <div className={styles.smallInput}>
@@ -137,6 +155,9 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
                         error: styles.error,
                       }}
                     />
+                    {touched.cvc && errors.cvc && (
+                      <div className={styles.fieldError}>{errors.cvc}</div>
+                    )}
                   </div>
                 </div>
               </Form>
@@ -152,8 +173,19 @@ const PayForm = ({ focusOnElement, isPayForOrder, sendRequest, back }) => {
       )}
 
       <div className={styles.buttonsContainer}>
-        <button form="myForm" className={styles.payButton} type="submit">
-          <span>{isPayForOrder ? 'Pay Now' : 'Cash Out'}</span>
+        <button
+          form="myForm"
+          className={styles.payButton}
+          type="submit"
+          disabled={isSubmitting}
+        >
+          <span>
+            {isSubmitting
+              ? 'Processing...'
+              : isPayForOrder
+              ? 'Pay Now'
+              : 'Cash Out'}
+          </span>
         </button>
 
         {isPayForOrder && (

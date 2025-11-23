@@ -1,6 +1,6 @@
 --7 
 SELECT role, COUNT(*) AS count
-FROM Users
+FROM "Users"
 GROUP BY role
 ORDER BY count DESC;
 

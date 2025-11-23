@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import isEmpty from 'lodash/isEmpty';
 import {
   pay as payAction,
-  clearPaymentStore,
+  clearPaymentError,
 } from '../../store/slices/paymentSlice';
 import PayForm from '../../components/PayForm/PayForm';
 import Error from '../../components/Error/Error';
@@ -19,7 +19,7 @@ const Payment = () => {
     (state) => state.contestCreationStore
   );
   const { contests } = contestCreationStore;
-  const { error } = payment;
+  const { error, isFetching } = payment;
 
   useEffect(() => {
     if (isEmpty(contests)) {
@@ -27,21 +27,36 @@ const Payment = () => {
     }
   }, [contests, navigate]);
 
+  useEffect(() => {
+    return () => {
+      if (error) {
+        dispatch(clearPaymentError());
+      }
+    };
+  }, [dispatch, error]);
+
   const pay = (values) => {
+    dispatch(clearPaymentError());
+
     const contestArray = Object.keys(contests).map((key) => ({
       ...contests[key],
     }));
-    const { number, expiry, cvc } = values;
+
+    const { number, expiry, cvc, name } = values;
 
     const data = new FormData();
+
     contestArray.forEach((contest) => {
-      data.append('files', contest.file);
+      if (contest.file) {
+        data.append('files', contest.file);
+      }
       contest.haveFile = !!contest.file;
     });
 
-    data.append('number', number);
-    data.append('expiry', expiry);
-    data.append('cvc', cvc);
+    data.append('name', name || '');
+    data.append('number', number || '');
+    data.append('expiry', expiry || '');
+    data.append('cvc', cvc || '');
     data.append('contests', JSON.stringify(contestArray));
     data.append('price', '100');
 
@@ -49,21 +64,39 @@ const Payment = () => {
   };
 
   const goBack = () => {
+    if (error) {
+      dispatch(clearPaymentError());
+    }
     navigate(-1);
   };
+
+  if (isEmpty(contests)) {
+    return (
+      <div className={styles.loadingContainer}>
+        <span>Redirecting to contests...</span>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.mainContainer}>
       <div className={styles.paymentContainer}>
         <span className={styles.headerLabel}>Checkout</span>
+
         {error && (
           <Error
             data={error.data}
             status={error.status}
-            clearError={() => dispatch(clearPaymentStore())}
+            clearError={() => dispatch(clearPaymentError())}
           />
         )}
-        <PayForm sendRequest={pay} back={goBack} isPayForOrder />
+
+        <PayForm
+          sendRequest={pay}
+          back={goBack}
+          isPayForOrder
+          isSubmitting={isFetching}
+        />
       </div>
 
       <div className={styles.orderInfoContainer}>
@@ -76,7 +109,9 @@ const Payment = () => {
           <span>Total:</span>
           <span>$100.00 USD</span>
         </div>
-        <a href="http://www.google.com">Have a promo code?</a>
+        <a href="http://www.google.com" onClick={(e) => e.preventDefault()}>
+          Have a promo code?
+        </a>
       </div>
     </div>
   );

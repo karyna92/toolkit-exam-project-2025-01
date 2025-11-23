@@ -1,8 +1,19 @@
 import { Formik, Form, Field, ErrorMessage } from 'formik';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Schemas from '../../utils/validators/validationSchems';
 import styles from './events.module.sass';
 
 const EventForm = ({ onAdd }) => {
+  const REMIND_OPTIONS = [
+    { value: '5m', label: '5 minutes' },
+    { value: '10m', label: '10 minutes' },
+    { value: '30m', label: '30 minutes' },
+    { value: '1h', label: '1 hour' },
+    { value: '2h', label: '2 hours' },
+    { value: '1d', label: '1 day' },
+  ];
+
   return (
     <Formik
       initialValues={{
@@ -17,21 +28,35 @@ const EventForm = ({ onAdd }) => {
       }}
       validationSchema={Schemas.EventFormSchema}
       onSubmit={(values, { resetForm }) => {
+
         const { name, date, time, remindBefore } = values;
         const dateTime = new Date(`${date}T${time}`);
 
         if (dateTime <= new Date()) {
-          alert('Choose time in the future');
+          toast.error('Choose time in the future');
           return;
         }
 
-        let minutes;
-        if (remindBefore.endsWith('m')) {
-          minutes = parseInt(remindBefore, 10);
-        } else if (remindBefore.endsWith('h')) {
-          minutes = parseInt(remindBefore, 10) * 60;
-        } else if (remindBefore.endsWith('d')) {
-          minutes = parseInt(remindBefore, 10) * 1440;
+        let minutes = 0;
+        switch (remindBefore.slice(-1)) {
+          case 'm':
+            minutes = parseInt(remindBefore, 10);
+            break;
+          case 'h':
+            minutes = parseInt(remindBefore, 10) * 60;
+            break;
+          case 'd':
+            minutes = parseInt(remindBefore, 10) * 1440;
+            break;
+          default:
+            minutes = 0;
+        }
+
+        const notifyTime = dateTime - minutes * 60000;
+
+        if (notifyTime <= new Date()) {
+          toast.error('Remind time must be in the future');
+          return;
         }
 
         const newEvent = {
@@ -39,10 +64,12 @@ const EventForm = ({ onAdd }) => {
           name,
           dateTime: dateTime.toISOString(),
           remindBefore: minutes,
+          createdAt: new Date().toISOString(),
         };
 
         onAdd(newEvent);
         resetForm();
+        toast.success('Event added successfully!');
       }}
     >
       {() => (
@@ -136,13 +163,13 @@ const EventForm = ({ onAdd }) => {
                 name="remindBefore"
                 className={`${styles.input} ${styles.selectInput}`}
               >
-                <option value="5m">5 minutes</option>
-                <option value="10m">10 minutes</option>
-                <option value="30m">30 minutes</option>
-                <option value="1h">1 hour</option>
-                <option value="2h">2 hours</option>
-                <option value="1d">1 day</option>
+                {REMIND_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
               </Field>
+
               <ErrorMessage
                 name="remindBefore"
                 component="div"

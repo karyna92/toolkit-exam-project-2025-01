@@ -1,13 +1,13 @@
-{
-"development": {
-  "username": "postgres",
-  "password": "password",
-  "database": "squad-help-dev",
-  "host": "db-dev",
-  "port": 5432,
-  "dialect": "postgres",
-  "seederStorage": "sequelize"
-},
+  {
+  "development": {
+    "username": "postgres",
+    "password": "password",
+    "database": "squad-help-dev",
+    "host": "localhost",
+    "port":  12346,
+    "dialect": "postgres",
+    "seederStorage": "sequelize"
+  },
   "test": {
     "username": "postgres",
     "password": "admin",

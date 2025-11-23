@@ -19,11 +19,6 @@ const UserInfo = () => {
     formData.append('lastName', values.lastName);
     formData.append('displayName', values.displayName);
 
-    console.log('FormData entries:');
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
     dispatch(updateUser(formData));
   };
 
@@ -32,9 +27,10 @@ const UserInfo = () => {
 
   const { avatar, firstName, lastName, displayName, email, role, balance } =
     data;
-  const avatarUrl = avatar
-    ? `${CONSTANTS.publicURL}${avatar}`
-    : CONSTANTS.ANONYM_IMAGE_PATH;
+  const avatarUrl =
+    avatar && avatar !== 'anon.png'
+      ? `${CONSTANTS.publicURL}${avatar}`
+      : CONSTANTS.ANONYM_IMAGE_PATH;
 
   return (
     <div className={styles.mainContainer}>

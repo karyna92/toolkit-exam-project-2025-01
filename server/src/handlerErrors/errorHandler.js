@@ -3,20 +3,34 @@ const logError = require('../services/errorLogger');
 
 const errorHandler = (err, req, res, next) => {
   try {
-    console.error(err);
+    logError(err, err.statusCode || 500);
 
-    const { statusCode, message } = mapErrorToResponse(err);
-    logError(err, statusCode);
+    const { statusCode, message, userMessage, code, ...additionalData } =
+      mapErrorToResponse(err);
 
     if (!res.headersSent) {
-      return res.status(statusCode).json({ error: message });
+      return res.status(statusCode).json({
+        success: false,
+        error: {
+          code,
+          message,
+          userMessage,
+          ...additionalData,
+        },
+      });
     }
-    console.error('Cannot send response, headers already sent');
   } catch (handlerError) {
-    console.error('Error handler failed:', handlerError);
     logError(handlerError, 500);
+
     if (res && !res.headersSent) {
-      res.status(500).json({ error: 'Critical server error' });
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'critical_error',
+          message: 'Critical server error',
+          userMessage: 'A critical error occurred. Please try again later.',
+        },
+      });
     }
   }
 };

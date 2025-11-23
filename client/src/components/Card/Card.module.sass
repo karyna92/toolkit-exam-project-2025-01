@@ -1,0 +1,34 @@
+@import '../../styles/variables'
+@import '../../styles/mixins'
+
+.card
+  max-height: 30rem
+  @include card-style
+  text-align: center
+  display: flex
+  flex-direction: column
+  justify-content: space-between
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1)
+
+  h4
+    margin: 1rem 0
+    font-size: 1.25rem
+    font-weight: 600
+
+  p
+    font-size: 1rem
+    margin-bottom: 1.5rem
+    color: $text-light
+
+  button
+    text-align: start
+    height: 3rem
+    margin: 2rem 0 0
+    @include button-style
+
+.cardButtonArrow
+  position: relative
+  bottom: 3px
+  font-size: 30px
+  line-height: 1
+  transition: left 0.3s ease

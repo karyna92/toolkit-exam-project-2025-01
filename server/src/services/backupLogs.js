@@ -21,7 +21,6 @@ async function backupLogs() {
           time: parsed.time,
         };
       } catch (err) {
-        console.error('Error parsing line for backup:', line);
         return null;
       }
     })
@@ -31,8 +30,7 @@ async function backupLogs() {
 
   const archivePath = path.join(ARCHIVE_DIR, getArchiveFileName());
   await fs.writeFile(archivePath, JSON.stringify(transformed, null, 2));
-
   await fs.writeFile(LOG_PATH, '');
-  console.log('Logs backed up successfully:', archivePath);
 }
+
 module.exports = backupLogs;

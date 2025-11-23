@@ -1,0 +1,37 @@
+@import '../../styles/variables'
+@import '../../styles/mixins'
+
+.step
+  @include card-style
+  padding: $card-padding
+  width: 100%
+  box-sizing: border-box
+  position: relative
+  text-align: left
+  color: $text-light
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1)
+
+.stepTitle
+  display: inline-block
+  font-weight: 700
+  background-color: #28D2D0
+  color: #fff
+  border-radius: 2rem
+  padding: 0.4rem 1rem
+  margin-bottom: 0.75rem
+
+.step p
+  font-size: 1rem
+  line-height: 1.5
+  margin-bottom: 1rem
+
+.stepsArrow
+  position: absolute
+  top: 35%
+  left: 94%
+  font-size: 50px
+  line-height: 1
+  color: $primary-blue
+
+
+

@@ -1,7 +1,7 @@
 import * as yup from 'yup';
 import valid from 'card-validator';
 
-const validationSchemas=  {
+const validationSchemas = {
   LoginSchem: yup.object().shape({
     email: yup.string().email('check email').required('required'),
     password: yup
@@ -117,30 +117,38 @@ const validationSchemas=  {
       .required('suggestion is required'),
   }),
   PaymentSchema: yup.object().shape({
-    number: yup
-      .string()
-      .test(
-        'test-cardNumber',
-        'Credit Card number is invalid',
-        (value) => valid.number(value).isValid
-      )
-      .required('required'),
     name: yup
       .string()
-      .min(1, 'required atleast one symbol')
-      .required('required'),
-    cvc: yup
+      .min(1, 'Cardholder name is required')
+      .required('Cardholder name is required'),
+    number: yup
       .string()
-      .test('test-cvc', 'cvc is invalid', (value) => valid.cvv(value).isValid)
-      .required('required'),
+      .required('Card number is required')
+      .test('test-card-number', 'Invalid card number', (value) => {
+        if (!value) return false;
+        const cleanValue = value.replace(/\s/g, '');
+        return valid.number(cleanValue).isValid;
+      }),
     expiry: yup
       .string()
+      .required('Expiry date is required')
+      .test('test-expiry', 'Invalid expiry date (MM/YY)', (value) => {
+        if (!value) return false;
+        const validation = valid.expirationDate(value);
+        if (!validation.isValid) return false;
+        if (validation.isExpired) {
+          throw new yup.ValidationError('Card has expired', value, 'expiry');
+        }
+        return true;
+      }),
+    cvc: yup
+      .string()
+      .required('Security code is required')
       .test(
-        'test-expiry',
-        'expiry is invalid',
-        (value) => valid.expirationDate(value).isValid
-      )
-      .required('required'),
+        'test-cvc',
+        'Invalid security code',
+        (value) => valid.cvv(value).isValid
+      ),
   }),
   CashoutSchema: yup.object().shape({
     sum: yup.number().min(5, 'min sum is 5$').required('required'),

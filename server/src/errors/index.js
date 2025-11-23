@@ -4,11 +4,13 @@ const NotFoundError = require('./NotFoundError');
 const ServerError = require('./ServerError');
 const DevAlreadyExistError = require('./DevAlreadyExistError');
 const BankDeclineError = require('./BankDeclineError');
-const NotEnoughMoney = require('./NotEnoughMoney');
 const NotUniqueEmail = require('./NotUniqueEmail');
 const RightsError = require('./RightsError');
 const UncorrectPassword = require('./UncorrectPassword');
 const TokenError = require('./TokenError');
+const InsufficientFundsError = require('./InsufficientFundsError');
+const ValidationError = require('./ValidationError');
+const InvalidCardError = require('./InvalidCardError');
 
 module.exports = {
   ApplicationError,
@@ -17,9 +19,11 @@ module.exports = {
   ServerError,
   BankDeclineError,
   DevAlreadyExistError,
-  NotEnoughMoney,
   NotUniqueEmail,
   RightsError,
   UncorrectPassword,
   TokenError,
+  ValidationError,
+  InsufficientFundsError,
+  InvalidCardError,
 };

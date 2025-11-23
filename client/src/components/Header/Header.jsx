@@ -1,6 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
+import {
+  loadEventsForUser,
+  markAllOngoingEventsAsSeen,
+  checkForOngoingEvents,
+  cleanupSeenEvents,
+} from '../../store/slices/eventsSlice';
 import { clearUserStore, getUser } from '../../store/slices/userSlice';
 import CONSTANTS from '../../constants';
 import styles from './Header.module.sass';
@@ -11,12 +17,13 @@ const Header = () => {
 
   const data = useSelector((state) => state.userStore.data);
   const isFetching = useSelector((state) => state.userStore.isFetching);
+
   const ongoingEvents = useSelector(
     (state) => state.events?.ongoingEvents || []
   );
-  const hasSeenOngoingEvents = useSelector(
-    (state) => state.events?.hasSeenOngoingEvents
-  );
+  const seenEventIds = useSelector((state) => state.events?.seenEventIds || []);
+
+  const [unseenEventsCount, setUnseenEventsCount] = useState(0);
 
   useEffect(() => {
     if (!data) {
@@ -24,8 +31,60 @@ const Header = () => {
     }
   }, [data, dispatch]);
 
+  useEffect(() => {
+    if (data?.id) {
+      dispatch(loadEventsForUser(data.id));
+    }
+  }, [data?.id, dispatch]);
+
+  useEffect(() => {
+    if (!data?.id) return;
+
+    const interval = setInterval(() => {
+      dispatch(checkForOngoingEvents());
+      dispatch(cleanupSeenEvents());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [data?.id, dispatch]);
+ 
+  useEffect(() => {
+    const calculateUnseenEvents = () => {
+      const now = Date.now();
+
+      const validEvents = ongoingEvents.filter((event) => {
+        const eventTime = new Date(event.dateTime).getTime();
+        return now - eventTime < 24 * 60 * 60 * 1000;
+      });
+
+      const unseenEvents = validEvents.filter(
+        (event) => !seenEventIds.includes(event.id)
+      );
+
+      return unseenEvents.length;
+    };
+
+    const newUnseenCount = calculateUnseenEvents();
+    if (newUnseenCount !== unseenEventsCount) {
+      setUnseenEventsCount(newUnseenCount);
+    }
+  }, [ongoingEvents, seenEventIds]); 
+
+  const handleEventsClick = () => {
+    if (unseenEventsCount > 0) {
+      dispatch(markAllOngoingEventsAsSeen());
+    }
+    navigate('/events');
+  };
+
   const logOut = () => {
-    localStorage.clear();
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (!key.startsWith('eventsState_')) {
+        localStorage.removeItem(key);
+      }
+    }
+
     dispatch(clearUserStore());
     navigate('/login', { replace: true });
   };
@@ -67,8 +126,10 @@ const Header = () => {
             src={`${CONSTANTS.STATIC_IMAGES_PATH}menu-down.png`}
             alt="menu"
           />
-          {ongoingEvents.length > 0 && !hasSeenOngoingEvents && (
-            <div className={styles.notificationDot}></div>
+
+          {unseenEventsCount > 0 && (
+            <div className={styles.notificationDot}>
+            </div>
           )}
 
           <ul>
@@ -105,14 +166,14 @@ const Header = () => {
                 </li>
                 {isCustomer && (
                   <li>
-                    <Link to="/events" style={{ textDecoration: 'none' }}>
-                      <div className={styles.events}>
-                        <span>Events</span>
-                        {ongoingEvents.length > 0 && (
-                          <p>{ongoingEvents.length}</p>
-                        )}
-                      </div>
-                    </Link>
+                    <div className={styles.events} onClick={handleEventsClick}>
+                      <span>Events</span>
+                      {unseenEventsCount > 0 && (
+                        <div className={styles.eventsBadge}>
+                          <span>{unseenEventsCount}</span>
+                        </div>
+                      )}
+                    </div>
                   </li>
                 )}
                 <li>
@@ -165,11 +226,13 @@ const Header = () => {
       </div>
 
       <div className={styles.navContainer}>
-        <img
-          src={`${CONSTANTS.STATIC_IMAGES_PATH}blue-logo.png`}
-          className={styles.logo}
-          alt="blue_logo"
-        />
+        <Link to="/">
+          <img
+            src={`${CONSTANTS.STATIC_IMAGES_PATH}blue-logo.png`}
+            className={styles.logo}
+            alt="blue_logo"
+          />
+        </Link>
         <div className={styles.leftNav}>
           <div className={styles.nav}>
             <ul>
@@ -214,7 +277,7 @@ const Header = () => {
                 />
                 <ul>
                   <li>
-                     <Link to="/information"> HOW IT WORKS</Link>
+                    <Link to="/information"> HOW IT WORKS</Link>
                   </li>
                   <li>
                     <a href="http://www.google.com">PRICING</a>

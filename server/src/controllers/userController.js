@@ -2,7 +2,14 @@ const jwt = require('jsonwebtoken');
 const { v4: uuid } = require('uuid');
 const moment = require('moment');
 const db = require('../models');
-const { NotUniqueEmail } = require('../errors');
+const {
+  NotUniqueEmail,
+  BankDeclineError,
+  BadRequestError,
+  InsufficientFundsError,
+  InvalidCardError,
+  ValidationError,
+} = require('../errors');
 const controller = require('../sockets/socketInit');
 const userQueries = require('../queries/userQueries');
 const bankQueries = require('../queries/bankQueries');
@@ -134,52 +141,126 @@ module.exports.changeMark = async (req, res, next) => {
 module.exports.payment = async (req, res, next) => {
   let transaction;
   try {
+    const { number, expiry, cvc, price, contests, name } = req.body;
+
+    if (!number || !expiry || !cvc || !price || !contests || !name) {
+      throw new BadRequestError(
+        ['number', 'expiry', 'cvc', 'price', 'contests', 'name'],
+        'Please fill in all required payment information.'
+      );
+    }
+
+    if (typeof name !== 'string' || name.trim().length < 2) {
+      throw new ValidationError(
+        'Invalid cardholder name',
+        'Please enter a valid cardholder name (minimum 2 characters).'
+      );
+    }
+
+    const cleanNumber = number.replace(/\s/g, '');
+    const cleanExpiry = expiry;
+    const cleanName = name.trim();
+
     transaction = await db.sequelize.transaction();
-    await bankQueries.updateBankBalance(
-      {
-        balance: db.sequelize.literal(`
-                CASE
-            WHEN "cardNumber"='${req.body.number.replace(
-              / /g,
-              ''
-            )}' AND "cvc"='${req.body.cvc}' AND "expiry"='${req.body.expiry}'
-                THEN "balance"-${req.body.price}
-            WHEN "cardNumber"='${CONSTANTS.SQUADHELP_BANK_NUMBER}' AND "cvc"='${
-              CONSTANTS.SQUADHELP_BANK_CVC
-            }' AND "expiry"='${CONSTANTS.SQUADHELP_BANK_EXPIRY}'
-                THEN "balance"+${req.body.price} END
-        `),
+
+    const customerCard = await db.Banks.findOne({
+      where: {
+        cardNumber: cleanNumber,
+        name: cleanName,
+        cvc: cvc,
+        expiry: cleanExpiry,
       },
+      transaction,
+    });
+
+    if (!customerCard) {
+      throw new InvalidCardError(
+        'The provided card details are not valid',
+        'The card details you entered are not valid. Please check your card number, name, expiry date, and CVC.'
+      );
+    }
+
+    const paymentAmount = parseFloat(price);
+    if (customerCard.balance < paymentAmount) {
+      throw new InsufficientFundsError(customerCard.balance, paymentAmount);
+    }
+
+    const customerUpdate = await db.Banks.update(
+      { balance: db.sequelize.literal(`"balance" - ${paymentAmount}`) },
       {
-        cardNumber: {
-          [db.Sequelize.Op.in]: [
-            CONSTANTS.SQUADHELP_BANK_NUMBER,
-            req.body.number.replace(/ /g, ''),
-          ],
+        where: {
+          cardNumber: cleanNumber,
+          name: cleanName,
+          cvc: cvc,
+          expiry: cleanExpiry,
         },
-      },
-      transaction
+        transaction,
+      }
     );
+
+    if (customerUpdate[0] === 0) {
+      throw new BankDeclineError(
+        'Unable to process payment',
+        'Unable to process payment. Please try again.'
+      );
+    }
+
+    const bankUpdate = await db.Banks.update(
+      { balance: db.sequelize.literal(`"balance" + ${paymentAmount}`) },
+      {
+        where: {
+          cardNumber: CONSTANTS.SQUADHELP_BANK_NUMBER,
+          cvc: CONSTANTS.SQUADHELP_BANK_CVC,
+          expiry: CONSTANTS.SQUADHELP_BANK_EXPIRY,
+        },
+        transaction,
+      }
+    );
+
+    if (bankUpdate[0] === 0) {
+      throw new BankDeclineError(
+        'Unable to complete transaction',
+        'Unable to complete transaction. Please contact support.'
+      );
+    }
+
     const orderId = uuid();
-    req.body.contests.forEach((contest, index) => {
+    const contestList =
+      typeof contests === 'string' ? JSON.parse(contests) : contests;
+
+    const contestPromises = contestList.map((contest, index) => {
       const prize =
-        index === req.body.contests.length - 1
-          ? Math.ceil(req.body.price / req.body.contests.length)
-          : Math.floor(req.body.price / req.body.contests.length);
-      contest = Object.assign(contest, {
+        index === contestList.length - 1
+          ? Math.ceil(paymentAmount / contestList.length)
+          : Math.floor(paymentAmount / contestList.length);
+
+      const contestData = {
+        ...contest,
         status: index === 0 ? 'active' : 'pending',
         userId: req.tokenData.userId,
         priority: index + 1,
         orderId,
-        createdAt: moment().format('YYYY-MM-DD HH:mm'),
         prize,
-      });
+      };
+
+      return db.Contests.create(contestData, { transaction });
     });
-    await db.Contests.bulkCreate(req.body.contests, transaction);
-    transaction.commit();
-    res.send();
+
+    await Promise.all(contestPromises);
+    await transaction.commit();
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment processed successfully',
+      orderId,
+    });
   } catch (err) {
-    transaction.rollback();
+    if (transaction && !transaction.finished) {
+      try {
+        await transaction.rollback();
+      } catch (rollbackError) {}
+    }
+
     next(err);
   }
 };
