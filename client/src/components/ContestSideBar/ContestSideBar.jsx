@@ -84,7 +84,7 @@ const ContestSideBar = (props) => {
                 src={
                   User.avatar === 'anon.png'
                     ? CONSTANTS.ANONYM_IMAGE_PATH
-                    : `${CONSTANTS.publicURL}${User.avatar}`
+                    : `${CONSTANTS.FILE_BASE_URL}/${User.avatar}`
                 }
                 alt="user"
               />

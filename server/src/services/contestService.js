@@ -2,16 +2,18 @@ const db = require('../models');
 const contestQueries = require('../queries/contestQueries');
 const userQueries = require('../queries/userQueries');
 const CONSTANTS = require('../constants');
+const { BadRequestError, ServerError } = require('../errors'); 
 
 module.exports.buildOfferObject = (req) => {
   const obj = {};
 
   if (req.body.contestType === CONSTANTS.LOGO_CONTEST) {
-    if (!req.file) throw new Error('Logo file is required');
+    if (!req.file) throw new BadRequestError('Logo file is required');
     obj.fileName = req.file.filename;
     obj.originalFileName = req.file.originalname;
   } else {
-    if (!req.body.offerData) throw new Error('Offer text is required');
+    if (!req.body.offerData)
+      throw new BadRequestError('Offer text is required');
     obj.text = req.body.offerData;
   }
 
@@ -29,6 +31,7 @@ module.exports.rejectOffer = async (offerId, creatorId, contestId) => {
 
   return rejectedOffer;
 };
+
 module.exports.declineOffer = async (offerId, creatorId, contestId) => {
   const declinedOffer = await contestQueries.updateOffer(
     { status: CONSTANTS.OFFER_STATUS_DECLINED },
@@ -71,19 +74,20 @@ module.exports.resolveOffer = async (
       { orderId },
       transaction
     );
+
     await userQueries.updateUser(
       { balance: db.sequelize.literal('balance + ' + finishedContest.prize) },
       creatorId,
       transaction
     );
 
-    const winningOfferUpdate = await contestQueries.updateOfferStatus(
+    await contestQueries.updateOfferStatus(
       { status: CONSTANTS.OFFER_STATUS_WON },
       { id: offerId },
       transaction
     );
 
-    const rejectedOffersUpdate = await contestQueries.updateOfferStatus(
+    await contestQueries.updateOfferStatus(
       { status: CONSTANTS.OFFER_STATUS_REJECTED },
       {
         contestId: contestId,
@@ -91,6 +95,7 @@ module.exports.resolveOffer = async (
       },
       transaction
     );
+
     const updatedOffers = await db.Offers.findAll({
       where: { contestId: contestId },
       include: [
@@ -102,32 +107,6 @@ module.exports.resolveOffer = async (
       transaction,
     });
 
-    console.log('🔔 [resolveOffer] DEBUG - All offers in contest:');
-    updatedOffers.forEach((offer, index) => {
-      console.log(`  Offer ${index + 1}:`, {
-        offerId: offer.id,
-        userId: offer.userId,
-        userRole: offer.User.role,
-        userDisplayName: offer.User.displayName,
-        userEmail: offer.User.email,
-        status: offer.status,
-      });
-    });
-
-    const moderatorsInOffers = updatedOffers.filter(
-      (o) => o.User.role === CONSTANTS.MODERATOR
-    );
-    if (moderatorsInOffers.length > 0) {
-      console.log(
-        '🚨 [resolveOffer] FOUND MODERATORS IN OFFERS:',
-        moderatorsInOffers.map((m) => ({
-          offerId: m.id,
-          userId: m.userId,
-          displayName: m.User.displayName,
-        }))
-      );
-    }
-
     const arrayRoomsId = updatedOffers
       .filter(
         (o) =>
@@ -135,9 +114,11 @@ module.exports.resolveOffer = async (
       )
       .map((o) => o.userId);
 
-    console.log('🔔 [resolveOffer] Users to notify:', arrayRoomsId);
     return updatedOffers.find((o) => o.id === offerId)?.dataValues;
   } catch (error) {
-    throw error;
+   if (error instanceof DatabaseError) {
+      throw error;
+    }
+    throw new DatabaseError(`Failed to resolve offer: ${error.message}`);
   }
 };

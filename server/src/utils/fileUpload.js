@@ -17,10 +17,8 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 const wrapUpload = (uploadMiddleware) => (req, res, next) => {
-  console.log('Before upload:', req.body);
   uploadMiddleware(req, res, (err) => {
     if (!req.files) req.files = [];
-    console.log('Uploaded files:', req.file || req.files);
     if (err) return next(new ServerError());
     next();
   });

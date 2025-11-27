@@ -11,6 +11,7 @@ const {
   RightsError,
   TokenError,
   UncorrectPassword,
+  DatabaseError
 } = require('../errors');
 
 const mapErrorToResponse = (err) => {
@@ -56,6 +57,7 @@ const mapErrorToResponse = (err) => {
     else if (err instanceof RightsError) code = 'rights_error';
     else if (err instanceof TokenError) code = 'token_error';
     else if (err instanceof UncorrectPassword) code = 'uncorrect_password';
+    else if (err instanceof  DatabaseError) code= 'database_error'
     else code = 'application_error';
   } else if (err.name === 'SequelizeValidationError') {
     statusCode = 400;

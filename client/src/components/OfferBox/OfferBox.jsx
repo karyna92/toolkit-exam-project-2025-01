@@ -82,6 +82,14 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     );
   };
 
+  // Нова функція для відкриття файлу
+  const openLogoFile = () => {
+    if (data.fileName) {
+      const fileUrl = `${CONSTANTS.FILE_BASE_URL}/${data.fileName}`;
+      window.open(fileUrl, '_blank');
+    }
+  };
+
   const offerStatus = () => {
     const { status } = data;
 
@@ -170,7 +178,7 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
               src={
                 avatar === 'anon.png'
                   ? CONSTANTS.ANONYM_IMAGE_PATH
-                  : `${CONSTANTS.publicURL}${avatar}`
+                  : `${CONSTANTS.FILE_BASE_URL}/${avatar}`
               }
               alt="user"
             />
@@ -203,19 +211,15 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
 
         <div className={styles.responseConainer}>
           {contestType === CONSTANTS.LOGO_CONTEST ? (
-            <img
-              onClick={() =>
-                dispatch(
-                  changeShowImage({
-                    imagePath: data.fileName,
-                    isShowOnFull: true,
-                  })
-                )
-              }
-              className={styles.responseLogo}
-              src={`${CONSTANTS.publicURL}${data.fileName}`}
-              alt="logo"
-            />
+            <div className={styles.logoContainer}>
+              <img
+                onClick={openLogoFile} // Змінено на нову функцію
+                className={styles.responseLogo}
+                src={`${CONSTANTS.FILE_BASE_URL}/${data.fileName}`}
+                alt="logo"
+              />
+              <div className={styles.logoHint}>Click to open full size</div>
+            </div>
           ) : (
             <span className={styles.response}>{data.text}</span>
           )}

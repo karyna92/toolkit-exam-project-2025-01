@@ -11,6 +11,7 @@ const TokenError = require('./TokenError');
 const InsufficientFundsError = require('./InsufficientFundsError');
 const ValidationError = require('./ValidationError');
 const InvalidCardError = require('./InvalidCardError');
+const DatabaseError = require('./DatabaseError');
 
 module.exports = {
   ApplicationError,
@@ -26,4 +27,5 @@ module.exports = {
   ValidationError,
   InsufficientFundsError,
   InvalidCardError,
+  DatabaseError,
 };

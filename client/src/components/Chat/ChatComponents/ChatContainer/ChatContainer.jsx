@@ -5,7 +5,9 @@ import Chat from '../Chat/Chat';
 const ChatContainer = () => {
   const data = useSelector((state) => state.userStore.data);
 
-  return <>{data ? <Chat /> : null}</>;
+  if (!data) return null;
+
+  return data.role !== 'moderator' ? <Chat /> : null;
 };
 
 export default ChatContainer;

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { confirmAlert } from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
+import CONSTANTS from '../../constants';
 import styles from './offersList.module.sass';
 
 const OffersList = ({
@@ -13,32 +14,37 @@ const OffersList = ({
   const [expandedContest, setExpandedContest] = useState(null);
   const expandedRefs = useRef({});
 
-const scrollToExpandedRow = (contestId, offset = 350) => {
-  requestAnimationFrame(() => {
-    const element = expandedRefs.current[contestId];
-    if (!element) return;
-    const top = element.getBoundingClientRect().top + window.scrollY;
+  const getFileUrl = (fileName) => {
+    if (!fileName) return null;
+    const fileUrl = `${CONSTANTS.FILE_BASE_URL}/${fileName}`;
+    return fileUrl;
+  };
 
-    window.scrollTo({
-      top: top - offset, 
-      behavior: 'smooth',
+  const scrollToExpandedRow = (contestId, offset = 350) => {
+    requestAnimationFrame(() => {
+      const element = expandedRefs.current[contestId];
+      if (!element) return;
+      const top = element.getBoundingClientRect().top + window.scrollY;
+
+      window.scrollTo({
+        top: top - offset,
+        behavior: 'smooth',
+      });
     });
-  });
-};
+  };
 
-const toggleContestDetails = (contestId) => {
-  setExpandedContest((prev) => {
-    const isClosing = prev === contestId;
-    const next = isClosing ? null : contestId;
+  const toggleContestDetails = (contestId) => {
+    setExpandedContest((prev) => {
+      const isClosing = prev === contestId;
+      const next = isClosing ? null : contestId;
 
-    if (!isClosing) {
-      scrollToExpandedRow(contestId); 
-    }
+      if (!isClosing) {
+        scrollToExpandedRow(contestId);
+      }
 
-    return next;
-  });
-};
-
+      return next;
+    });
+  };
 
   const approveOffer = (offerId, userId) => {
     confirmAlert({
@@ -128,7 +134,9 @@ const toggleContestDetails = (contestId) => {
                   count
                 </div>
                 <div className={styles.tableCell}>
-                  <span className={styles.count}>{contestOffers.length}</span>
+                  <span className={styles.count}>
+                    {contest.totalOffersCount || 0}
+                  </span>
                 </div>
                 <div className={`${styles.combinedColumn} ${styles.tableCell}`}>
                   {contestOffers.length > 0 ? (
@@ -163,7 +171,7 @@ const toggleContestDetails = (contestId) => {
                             <div className={styles.mobileHeader}>Files</div>
                             {offer.fileName ? (
                               <a
-                                href={offer.fileName}
+                                href={getFileUrl(offer.fileName)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={styles.fileButton}
@@ -271,13 +279,13 @@ const toggleContestDetails = (contestId) => {
                       </p>
                     </div>
 
-                    {contest.fileName && (
+                    {(contest.fileName || contest.file) && (
                       <div className={styles.filesSection}>
                         <h5>Contest Files</h5>
                         <div className={styles.filesList}>
                           <div className={styles.fileItem}>
                             <a
-                              href={contest.fileName}
+                              href={getFileUrl(contest.fileName)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className={styles.fileLink}

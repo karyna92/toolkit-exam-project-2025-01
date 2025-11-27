@@ -8,7 +8,7 @@ import Error from '../Error/Error';
 import CONSTANTS from '../../constants';
 import styles from './LoginForm.module.sass';
 
-const LoginForm = ({ navigate }) => {
+const LoginForm = () => {
   const dispatch = useDispatch();
   const auth = useSelector((state) => state.auth); 
   const { error, isFetching } = auth;
@@ -23,7 +23,6 @@ const LoginForm = ({ navigate }) => {
     dispatch(
       checkAuth({
         data: values,
-        navigate,
         authMode: CONSTANTS.AUTH_MODE.LOGIN,
       })
     );

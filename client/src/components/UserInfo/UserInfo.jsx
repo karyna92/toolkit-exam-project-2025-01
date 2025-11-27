@@ -29,7 +29,7 @@ const UserInfo = () => {
     data;
   const avatarUrl =
     avatar && avatar !== 'anon.png'
-      ? `${CONSTANTS.publicURL}${avatar}`
+      ? `${CONSTANTS.FILE_BASE_URL}/${avatar}`
       : CONSTANTS.ANONYM_IMAGE_PATH;
 
   return (

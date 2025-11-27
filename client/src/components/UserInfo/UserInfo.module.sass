@@ -116,21 +116,22 @@
           flex: none
           width: 100%
 
-      .info
-        font-size: 1rem
-        color: #455a89
-        font-weight: 500
-        flex: 0 0 55%
-        text-align: right
-        word-break: break-word
-        overflow: hidden 
-        text-overflow: ellipsis
-        
-        @media(max-width: 800px)
-          flex: 0 0 50% 
-          
-        @media(max-width: 480px)
-          flex: none
-          width: 100%
-          text-align: left
+.info
+  font-size: 1rem
+  color: #455a89
+  font-weight: 500
+  flex: 0 0 55%
+  text-align: right
+  word-wrap: break-word
+  overflow-wrap: break-word
+  white-space: normal
+  
+  @media(max-width: 800px)
+    flex: 0 0 50% 
+    
+  @media(max-width: 480px)
+    flex: none
+    width: 100%
+    text-align: left
+    word-break: break-all
 

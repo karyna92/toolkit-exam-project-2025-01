@@ -5,19 +5,20 @@ const controller = require('../sockets/socketInit');
 const UtilFunctions = require('../utils/functions');
 const { mailing } = require('../utils/mailing');
 const contestService = require('../services/contestService');
+const { FILES_PATH } = require('../config/path');
 const CONSTANTS = require('../constants');
 
 module.exports.dataForContest = async (req, res, next) => {
   const response = {};
   try {
     const { body } = req;
-  
+
     const characteristic1 = body?.characteristic1 || '';
     const characteristic2 = body?.characteristic2 || '';
 
     const types = [characteristic1, characteristic2, 'industry'].filter(
       Boolean
-    )
+    );
 
     const characteristics = await db.Selects.findAll({
       where: {
@@ -38,7 +39,6 @@ module.exports.dataForContest = async (req, res, next) => {
     });
     res.send(response);
   } catch (err) {
-    console.log(err);
     next(new ServerError('cannot get contest preferences'));
   }
 };
@@ -125,7 +125,10 @@ module.exports.getContests = async (req, res, next) => {
 
     const contests = await db.Contests.findAll({
       where: predicates.where,
-      order: [['prize', 'asc'], ['id', 'DESC']],
+      order: [
+        ['prize', 'asc'],
+        ['id', 'DESC'],
+      ],
       limit: parsedLimit,
       offset: parsedOffset,
     });
@@ -165,11 +168,7 @@ module.exports.getContests = async (req, res, next) => {
 
 module.exports.getCustomersContests = async (req, res, next) => {
   try {
-    const {
-      status,
-      limit = 5,
-      offset = 0,
-    } = req.query;
+    const { status, limit = 5, offset = 0 } = req.query;
 
     if (!status) {
       return next(new BadRequestError('Status query param required'));
@@ -180,7 +179,7 @@ module.exports.getCustomersContests = async (req, res, next) => {
 
     const whereClause = {
       status: status,
-      userId: req.tokenData.userId 
+      userId: req.tokenData.userId,
     };
 
     const totalCount = await db.Contests.count({
@@ -189,7 +188,7 @@ module.exports.getCustomersContests = async (req, res, next) => {
 
     const contests = await db.Contests.findAll({
       where: whereClause,
-      order: [['id', 'DESC']], 
+      order: [['id', 'DESC']],
       limit: parsedLimit,
       offset: parsedOffset,
       include: [
@@ -229,10 +228,16 @@ module.exports.getCustomersContests = async (req, res, next) => {
 };
 
 module.exports.downloadFile = async (req, res, next) => {
-  const contest = await db.Contests.findByPk(req.params.contestId);
-  if (!contest) return next(new NotFoundError('Contest not found'));
-  const file = CONSTANTS.CONTESTS_DEFAULT_DIR + req.params.fileName;
-  res.download(file);
+  try {
+    const filePath = path.join(FILES_PATH, req.params.fileName);
+
+    if (!fs.existsSync(filePath)) {
+      return next(new NotFoundError('File not found'));
+    }
+    res.download(filePath, req.params.fileName);
+  } catch (err) {
+    next(new ServerError(err.message));
+  }
 };
 
 module.exports.updateContest = async (req, res, next) => {
@@ -380,67 +385,64 @@ module.exports.getContestsWithOffers = async (req, res, next) => {
       offerWhere.status = status;
     }
 
-    const totalOffersCount = await db.Offers.count({
+    const contestOffersCount = await db.Offers.findAll({
+      where: offerWhere,
       include: [
         {
           model: db.Contests,
           where: { status: ['active', 'finished'] },
           required: true,
+          attributes: ['id'],
         },
       ],
-      where: offerWhere,
+      attributes: [
+        'contestId',
+        [
+          db.sequelize.fn('COUNT', db.sequelize.col('Offers.id')),
+          'offersCount',
+        ],
+      ],
+      group: ['contestId', 'Contest.id'],
+      raw: true,
     });
 
-    const contests = await db.Contests.findAll({
-      where: { status: ['active', 'finished'] },
+    const contestsCountMap = new Map();
+    contestOffersCount.forEach((item) => {
+      contestsCountMap.set(item.contestId, parseInt(item.offersCount));
+    });
+
+    const paginatedOffers = await db.Offers.findAll({
+      where: offerWhere,
       include: [
         {
-          model: db.Offers,
+          model: db.Contests,
+          where: { status: ['active', 'finished'] },
           required: true,
-          where: offerWhere,
           attributes: [
             'id',
+            'title',
+            'contestType',
             'status',
-            'text',
-            'fileName',
-            'createdAt',
-            'contestId',
-            'userId',
+            'prize',
+            'industry',
+            'focusOfWork',
+            'targetCustomer',
+            'fileName'
           ],
         },
       ],
-      order: [['id', 'DESC']],
+      order: [['createdAt', 'DESC']],
+      limit: rowsPerPage,
+      offset: offset,
     });
-
-    const allOffers = [];
-    contests.forEach((contest) => {
-      contest.Offers.forEach((offer) => {
-        allOffers.push({
-          ...offer.toJSON(),
-          Contest: {
-            id: contest.id,
-            title: contest.title,
-            contestType: contest.contestType,
-            status: contest.status,
-            prize: contest.prize,
-            industry: contest.industry,
-            focusOfWork: contest.focusOfWork,
-            targetCustomer: contest.targetCustomer,
-          },
-        });
-      });
-    });
-
-    allOffers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-    const paginatedOffers = allOffers.slice(offset, offset + rowsPerPage);
 
     const contestsMap = new Map();
     paginatedOffers.forEach((offer) => {
       const contestId = offer.Contest.id;
       if (!contestsMap.has(contestId)) {
         contestsMap.set(contestId, {
-          ...offer.Contest,
+          ...offer.Contest.toJSON(),
+          totalOffersCount: contestsCountMap.get(contestId) || 0,
           Offers: [],
         });
       }
@@ -456,6 +458,17 @@ module.exports.getContestsWithOffers = async (req, res, next) => {
     });
 
     const paginatedContests = Array.from(contestsMap.values());
+    const totalOffersCount = await db.Offers.count({
+      include: [
+        {
+          model: db.Contests,
+          where: { status: ['active', 'finished'] },
+          required: true,
+        },
+      ],
+      where: offerWhere,
+    });
+
     const totalPages = Math.ceil(totalOffersCount / rowsPerPage);
 
     res.send({

@@ -22,6 +22,12 @@ const ContestInfo = (props) => {
     User,
     status,
   } = contestData;
+
+  const getFileUrl = (fileName) => {
+    if (!fileName) return null;
+    const fileUrl = `${CONSTANTS.FILE_BASE_URL}/${fileName}`;
+    return fileUrl;
+  };
   return (
     <div className={styles.mainContestInfoContainer}>
       <div className={styles.infoContainer}>
@@ -85,7 +91,8 @@ const ContestInfo = (props) => {
             <a
               target="_blank"
               className={styles.file}
-              href={`${CONSTANTS.publicURL}${fileName}`}
+              href={getFileUrl(`${fileName}`)}
+              // href={`${CONSTANTS.publicURL}${fileName}`}
               download={originalFileName}
               rel="noreferrer"
             >

@@ -31,14 +31,19 @@ const Chat = () => {
     isShowChatsInCatalog,
   } = useSelector((state) => state.chatStore);
 
-  const { id } = useSelector((state) => state.userStore.data);
+  const { data: userData } = useSelector((state) => state.userStore);
+  const { id, role } = userData || {};
 
   useEffect(() => {
-    chatController.subscribeChat(id);
-    dispatch(getPreviewChat());
+    if (id) {
+      chatController.subscribeChat(id);
+      dispatch(getPreviewChat());
+    }
 
     return () => {
-      chatController.unsubscribeChat(id);
+      if (id) {
+        chatController.unsubscribeChat(id);
+      }
     };
   }, [dispatch, id]);
 
@@ -159,6 +164,8 @@ const Chat = () => {
     );
   };
 
+  const isNotModerator = role !== CONSTANTS.MODERATOR;
+
   return (
     <div
       className={classNames(styles.chatContainer, {
@@ -177,9 +184,12 @@ const Chat = () => {
       ) : (
         renderDialogList()
       )}
-      <div className={styles.toggleChat} onClick={handleChangeShow}>
-        {isShow ? 'Hide Chat' : 'Show Chat'}
-      </div>
+
+      {isNotModerator && (
+        <div className={styles.toggleChat} onClick={handleChangeShow}>
+          {isShow ? 'Hide Chat' : 'Show Chat'}
+        </div>
+      )}
     </div>
   );
 };

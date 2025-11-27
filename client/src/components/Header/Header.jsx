@@ -117,7 +117,7 @@ const Header = () => {
             src={
               data.avatar === 'anon.png'
                 ? CONSTANTS.ANONYM_IMAGE_PATH
-                : `${CONSTANTS.publicURL}${data.avatar}`
+                : `${CONSTANTS.FILE_BASE_URL}/${data.avatar}`
             }
             alt="user"
           />
@@ -128,8 +128,7 @@ const Header = () => {
           />
 
           {unseenEventsCount > 0 && (
-            <div className={styles.notificationDot}>
-            </div>
+            <div className={styles.notificationDot}></div>
           )}
 
           <ul>
@@ -138,6 +137,11 @@ const Header = () => {
                 <li>
                   <Link to="/offers" style={{ textDecoration: 'none' }}>
                     <span>Offers</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/account" style={{ textDecoration: 'none' }}>
+                    <span>My Account</span>
                   </Link>
                 </li>
                 <li>

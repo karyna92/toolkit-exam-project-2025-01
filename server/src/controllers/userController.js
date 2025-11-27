@@ -72,7 +72,6 @@ module.exports.registration = async (req, res, next) => {
   }
 };
 module.exports.updateUser = async (req, res, next) => {
-  console.log('Update request received:', req.body);
   try {
     if (req.file) {
       req.body.avatar = req.file.filename;

@@ -182,3 +182,26 @@
   color: white
   padding:5px
   border-radius: 5px
+
+.logoContainer
+  display: flex
+  flex-direction: column
+  align-items: center
+  cursor: pointer
+
+.logoHint
+  font-size: 12px
+  color: #666
+  margin-top: 5px
+  opacity: 0
+  transition: opacity 0.3s ease
+
+.logoContainer:hover .logoHint
+  opacity: 1
+
+.responseLogo
+  cursor: pointer
+  transition: transform 0.2s ease
+
+.responseLogo:hover
+  transform: scale(1.05)  

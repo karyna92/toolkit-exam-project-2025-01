@@ -43,8 +43,8 @@ docker volume rm toolkit-exam-project-2025-01_postgres-data
 
 🌐 Access Points
 
-Frontend: http://localhost:5000
-Backend API: http://localhost:3002
+Frontend:  http://localhost:3000
+Backend API:  http://localhost:3000
 Database: localhost:12346
 
 ---
@@ -213,4 +213,10 @@ Migrated chat functionality from MongoDB to PostgreSQL.
 Added Sequelize models and migrations.
 
 Updated all related server logic accordingly.
-```
+
+🛠 Fixes 
+    Integrated SASS variables/mixins in HowItworks and ButtonGroup components(posibility for rewriting all others component using it as well)
+
+    Fixed  crucial bugs in code functionality 
+    
+    Fixed correct beaver  for Moderators and Events pages

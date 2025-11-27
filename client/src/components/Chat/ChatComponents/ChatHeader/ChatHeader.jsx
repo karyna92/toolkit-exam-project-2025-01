@@ -84,7 +84,7 @@ const ChatHeader = ({ onFavoriteToggle, onBlockToggle }) => {
             src={
               avatar === 'anon.png'
                 ? CONSTANTS.ANONYM_IMAGE_PATH
-                : `${CONSTANTS.publicURL}${avatar}`
+                : `${CONSTANTS.FILE_BASE_URL}/${avatar}`
             }
             alt="user"
           />

@@ -230,10 +230,6 @@ const needButtons = (offerStatus) => {
       
                   {totalPages > 1 && (
                     <div className={styles.offersPagination}>
-                      <div className={styles.offersInfo}>
-                        Showing {getCurrentOffers().length} of {totalOffers}{' '}
-                        offers
-                      </div>
                       <Pagination
                         currentPage={currentPage}
                         totalPages={totalPages}

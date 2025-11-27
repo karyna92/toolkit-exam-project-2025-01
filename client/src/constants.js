@@ -1,8 +1,8 @@
-const env = process.env.NODE_ENV || 'development';
-const serverIP = 'localhost';
-// const serverPort = 3002;
-const serverPort = 3000;
-const CONSTANS = {
+import { getEnvironmentConfig, buildUrl } from './helpers/configHelper';
+
+const config = getEnvironmentConfig();
+
+const CONSTANTS = {
   CONTACTS: {
     TEL: '(877)355-3585',
   },
@@ -22,13 +22,12 @@ const CONSTANS = {
   OFFER_STATUS_APPROVED: 'approved',
   STATIC_IMAGES_PATH: '/staticImages/',
   ANONYM_IMAGE_PATH: '/staticImages/anonym.png',
-  BASE_URL: `http://${serverIP}:${serverPort}/api`,
-  BASE_URL_SOCKET: `http://${serverIP}:${serverPort}/`,
+  BASE_URL: buildUrl(config.serverIP, config.serverPort, '/api'),
+  BASE_URL_SOCKET: buildUrl(config.serverIP, config.serverPort, '/'),
+  FILE_BASE_URL: config.fileBaseUrl,
+
   ACCESS_TOKEN: 'accessToken',
-  publicURL:
-    env === 'production'
-      ? `http://${serverIP}:80/images/`
-      : `http://${serverIP}:${serverPort}/images/`,
+  publicURL: config.publicURL,
   NORMAL_PREVIEW_CHAT_MODE: 'NORMAL_PREVIEW_CHAT_MODE',
   FAVORITE_PREVIEW_CHAT_MODE: 'FAVORITE_PREVIEW_CHAT_MODE',
   BLOCKED_PREVIEW_CHAT_MODE: 'BLOCKED_PREVIEW_CHAT_MODE',
@@ -146,4 +145,4 @@ const CONSTANS = {
   },
 };
 
-export default CONSTANS;
+export default CONSTANTS;

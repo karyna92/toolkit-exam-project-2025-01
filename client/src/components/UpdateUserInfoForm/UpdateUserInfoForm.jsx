@@ -24,7 +24,6 @@ const UpdateUserInfoForm = ({ onSubmit, submitting }) => {
   return (
     <Formik
       onSubmit={(values, actions) => {
-        console.log('Submitting form values:', values);
         onSubmit(values, actions); 
       }}
       initialValues={initialValues}

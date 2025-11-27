@@ -412,7 +412,6 @@ const reducers = {
         createdAt: message.createdAt,
       };
     } else {
-      console.log('⚠️ No existing preview found — adding new one');
       messagesPreview.push(preview);
     }
     messagesPreview.sort(

@@ -20,8 +20,21 @@ export default defineConfig({
     react(),
   ],
   server: {
-    port: 3000,
+    port: 5000,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/socket.io': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+    },
   },
   build: {
     target: browserslistToEsbuild([

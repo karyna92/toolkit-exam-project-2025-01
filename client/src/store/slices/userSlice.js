@@ -14,13 +14,10 @@ const initialState = {
 
 export const getUser = createAsyncThunk(
   `${USER_SLICE_NAME}/getUser`,
-  async (navigate, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
       const { data } = await restController.getUser();
       controller.subscribe(data.id);
-      if (navigate) {
-        navigate('/', { replace: true });
-      }
       return data;
     } catch (err) {
       return rejectWithValue({
@@ -35,7 +32,6 @@ export const updateUser = createAsyncThunk(
   `${USER_SLICE_NAME}/updateUser`,
   async (payload, { rejectWithValue, dispatch }) => {
     try {
-      console.log('update User Data', payload);
       const { data } = await restController.updateUser(payload);
       dispatch(changeEditModeOnUserProfile(false));
       return data;
@@ -54,6 +50,11 @@ const reducers = {
     state.data = null;
   },
   clearUserError: (state) => {
+    state.error = null;
+  },
+  setUserData: (state, action) => {
+    state.data = action.payload;
+    state.isFetching = false;
     state.error = null;
   },
 };
@@ -88,6 +89,6 @@ const userSlice = createSlice({
 
 const { actions, reducer } = userSlice;
 
-export const { clearUserStore, clearUserError } = actions;
+export const { clearUserStore, clearUserError, setUserData } = actions;
 
 export default reducer;

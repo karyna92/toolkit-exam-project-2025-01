@@ -3,7 +3,6 @@ import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 import classNames from 'classnames';
 import {
   getContests,
-  clearContestsList,
   setNewCustomerFilter,
 } from '../../store/slices/contestsSlice';
 import ContestsContainer from '../ContestsContainer/ContestsContainer';
@@ -35,14 +34,13 @@ const CustomerDashboard = ({ navigate }) => {
       const limit = 5;
       const offset = (page - 1) * limit;
 
-      dispatch(clearContestsList());
 
       dispatch(
         getContests({
           requestData: {
             limit,
             offset,
-            status: customerFilter, 
+            status: customerFilter,
           },
           role: CONSTANTS.CUSTOMER,
         })
@@ -66,12 +64,17 @@ const CustomerDashboard = ({ navigate }) => {
   const handleFilterChange = (filter) => {
     dispatch(setNewCustomerFilter(filter));
     setCurrentPage(1);
-    getContestsData(1);
   };
 
   useEffect(() => {
-    getContestsData(1);
-  }, [dispatch, customerFilter]);
+    getContestsData(currentPage);
+  }, [customerFilter]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      getContestsData(currentPage);
+    }
+  }, [currentPage]);
 
   const renderContests = () =>
     contests.map((contest, i) => (
@@ -118,8 +121,12 @@ const CustomerDashboard = ({ navigate }) => {
           <div className={styles.paginatedWrapper}>
             <ContestsContainer
               isFetching={isFetching}
-              haveMore={false}
-              loadMore={() => {}}
+              haveMore={haveMore}
+              loadMore={() => {
+                if (haveMore && !isFetching) {
+                  handlePageChange(currentPage + 1);
+                }
+              }}
             >
               {renderContests()}
             </ContestsContainer>

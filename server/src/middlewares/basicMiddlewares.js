@@ -61,7 +61,6 @@ module.exports.onlyForCustomer = (req, res, next) => {
 };
 
 module.exports.onlyForModerator = (req, res, next) => {
-  console.log('Role in middleware:', req.tokenData.role);
   if (req.tokenData.role !== CONSTANTS.MODERATOR) {
     return next(new RightsError('Access denied: moderators only'));
   }

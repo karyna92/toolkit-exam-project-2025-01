@@ -13,7 +13,6 @@ import styles from './Brief.module.sass';
 
 const Brief = (props) => {
   const setNewContestData = (values) => {
-    console.log(values);
     const data = new FormData();
     Object.keys(values).forEach((key) => {
       if (key !== 'file' && values[key]) data.append(key, values[key]);
