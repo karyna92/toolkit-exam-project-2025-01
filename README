@@ -43,7 +43,7 @@ docker volume rm toolkit-exam-project-2025-01_postgres-data
 
 🌐 Access Points
 
-Frontend:  http://localhost:3000
+Frontend:  http://localhost:5000
 Backend API:  http://localhost:3000
 Database: localhost:12346
 
