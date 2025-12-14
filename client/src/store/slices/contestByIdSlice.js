@@ -70,6 +70,40 @@ const addOfferExtraReducers = createExtraReducers({
   },
 });
 
+
+const offerStatusHandlers = {
+  [CONSTANTS.OFFER_STATUS_APPROVED]: (state, payload) => {
+    const offer = state.offers.find((o) => o.id === payload.id);
+    if (offer) {
+      offer.status = CONSTANTS.OFFER_STATUS_APPROVED;
+    }
+  },
+
+  [CONSTANTS.OFFER_STATUS_DECLINED]: (state, payload) => {
+    const offer = state.offers.find((o) => o.id === payload.id);
+    if (offer) {
+      offer.status = CONSTANTS.OFFER_STATUS_DECLINED;
+    }
+  },
+
+  [CONSTANTS.OFFER_STATUS_WON]: (state, payload) => {
+    state.offers.forEach((offer) => {
+      if (offer.id === payload.id) {
+        offer.status = CONSTANTS.OFFER_STATUS_WON;
+      } else if (offer.status === CONSTANTS.OFFER_STATUS_APPROVED) {
+        offer.status = CONSTANTS.OFFER_STATUS_REJECTED;
+      }
+    });
+  },
+
+  [CONSTANTS.OFFER_STATUS_REJECTED]: (state, payload) => {
+    const offer = state.offers.find((o) => o.id === payload.id);
+    if (offer) {
+      offer.status = CONSTANTS.OFFER_STATUS_REJECTED;
+    }
+  },
+};
+
 export const setOfferStatus = decorateAsyncThunk({
   key: `${CONTEST_BY_ID_SLICE_NAME}/setOfferStatus`,
   thunk: async (payload) => {
@@ -78,29 +112,6 @@ export const setOfferStatus = decorateAsyncThunk({
   },
 });
 
-const offerStatusHandlers = {
-  [CONSTANTS.OFFER_STATUS_WON]: (state, payload) => {
-    state.offers.forEach((offer) => {
-      offer.status =
-        payload.id === offer.id
-          ? CONSTANTS.OFFER_STATUS_WON
-          : CONSTANTS.OFFER_STATUS_REJECTED;
-    });
-  },
-  [CONSTANTS.OFFER_STATUS_REJECTED]: (state, payload) => {
-    const offer = state.offers.find((o) => o.id === payload.id);
-    if (offer) {
-      offer.status = CONSTANTS.OFFER_STATUS_REJECTED;
-    }
-  },
-  [CONSTANTS.OFFER_STATUS_APPROVED]: (state, payload) => {
-    const offer = state.offers.find((o) => o.id === payload.id);
-    if (offer) {
-      offer.status = CONSTANTS.OFFER_STATUS_APPROVED;
-    }
-  },
-};
-
 const setOfferStatusExtraReducers = createExtraReducers({
   thunk: setOfferStatus,
   fulfilledReducer: (state, { payload }) => {
@@ -108,6 +119,8 @@ const setOfferStatusExtraReducers = createExtraReducers({
 
     if (handler) {
       handler(state, payload);
+    } else {
+      console.warn(`No handler for status: ${payload.status}`);
     }
 
     state.error = null;

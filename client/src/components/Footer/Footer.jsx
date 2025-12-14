@@ -1,8 +1,17 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import styles from './Footer.module.sass';
 import CONSTANTS from '../../constants';
 
 const Footer = ({ navigate }) => {
+  const data = useSelector((state) => state.userStore.data);
+  const isModerator = data?.role === 'moderator';
+
+  // If user is a moderator, don't render the footer
+  if (isModerator) {
+    return null;
+  }
+
   const topFooterItemsRender = (item) => {
     return (
       <div key={item.title}>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -17,13 +17,27 @@ const Header = () => {
 
   const data = useSelector((state) => state.userStore.data);
   const isFetching = useSelector((state) => state.userStore.isFetching);
-
   const ongoingEvents = useSelector(
     (state) => state.events?.ongoingEvents || []
   );
   const seenEventIds = useSelector((state) => state.events?.seenEventIds || []);
 
   const [unseenEventsCount, setUnseenEventsCount] = useState(0);
+
+  const userInfo = useMemo(() => {
+    if (!data) return null;
+    return {
+      isModerator: data.role === 'moderator',
+      isCustomer: data.role === 'customer',
+      displayName: data.displayName,
+      avatar:
+        data.avatar === 'anon.png'
+          ? CONSTANTS.ANONYM_IMAGE_PATH
+          : `${CONSTANTS.FILE_BASE_URL}/${data.avatar}`,
+      id: data.id,
+      role: data.role,
+    };
+  }, [data]);
 
   useEffect(() => {
     if (!data) {
@@ -32,13 +46,13 @@ const Header = () => {
   }, [data, dispatch]);
 
   useEffect(() => {
-    if (data?.id) {
-      dispatch(loadEventsForUser(data.id));
+    if (userInfo?.id) {
+      dispatch(loadEventsForUser(userInfo.id));
     }
-  }, [data?.id, dispatch]);
+  }, [userInfo?.id, dispatch]);
 
   useEffect(() => {
-    if (!data?.id) return;
+    if (!userInfo?.id) return;
 
     const interval = setInterval(() => {
       dispatch(checkForOngoingEvents());
@@ -46,12 +60,11 @@ const Header = () => {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [data?.id, dispatch]);
- 
+  }, [userInfo?.id, dispatch]);
+
   useEffect(() => {
     const calculateUnseenEvents = () => {
       const now = Date.now();
-
       const validEvents = ongoingEvents.filter((event) => {
         const eventTime = new Date(event.dateTime).getTime();
         return now - eventTime < 24 * 60 * 60 * 1000;
@@ -60,7 +73,6 @@ const Header = () => {
       const unseenEvents = validEvents.filter(
         (event) => !seenEventIds.includes(event.id)
       );
-
       return unseenEvents.length;
     };
 
@@ -68,7 +80,7 @@ const Header = () => {
     if (newUnseenCount !== unseenEventsCount) {
       setUnseenEventsCount(newUnseenCount);
     }
-  }, [ongoingEvents, seenEventIds]); 
+  }, [ongoingEvents, seenEventIds]);
 
   const handleEventsClick = () => {
     if (unseenEventsCount > 0) {
@@ -107,32 +119,23 @@ const Header = () => {
       );
     }
 
-    const isModerator = data.role === 'moderator';
-    const isCustomer = data.role === 'customer';
-
     return (
       <>
         <div className={styles.userInfo}>
-          <img
-            src={
-              data.avatar === 'anon.png'
-                ? CONSTANTS.ANONYM_IMAGE_PATH
-                : `${CONSTANTS.FILE_BASE_URL}/${data.avatar}`
-            }
-            alt="user"
-          />
-          <span>{`Hi, ${data.displayName}`}</span>
+          <img src={userInfo.avatar} alt="user" />
+          <span>{`Hi, ${userInfo.displayName}`}</span>
           <img
             src={`${CONSTANTS.STATIC_IMAGES_PATH}menu-down.png`}
             alt="menu"
           />
 
-          {unseenEventsCount > 0 && (
+          {unseenEventsCount > 0 && userInfo.isCustomer && (
             <div className={styles.notificationDot}></div>
           )}
 
           <ul>
-            {isModerator ? (
+            {userInfo.isModerator ? (
+              // Moderator menu - simplified
               <>
                 <li>
                   <Link to="/offers" style={{ textDecoration: 'none' }}>
@@ -149,6 +152,7 @@ const Header = () => {
                 </li>
               </>
             ) : (
+              // Non-moderator menu (customer, etc.)
               <>
                 <li>
                   <Link to="/dashboard" style={{ textDecoration: 'none' }}>
@@ -168,7 +172,7 @@ const Header = () => {
                     <span>Messages</span>
                   </Link>
                 </li>
-                {isCustomer && (
+                {userInfo.isCustomer && (
                   <li>
                     <div className={styles.events} onClick={handleEventsClick}>
                       <span>Events</span>
@@ -196,39 +200,24 @@ const Header = () => {
           </ul>
         </div>
 
-        <img
-          src={`${CONSTANTS.STATIC_IMAGES_PATH}email.png`}
-          className={styles.emailIcon}
-          alt="email"
-        />
+        {!userInfo.isModerator && (
+          <img
+            src={`${CONSTANTS.STATIC_IMAGES_PATH}email.png`}
+            className={styles.emailIcon}
+            alt="email"
+          />
+        )}
       </>
     );
   };
 
-  if (isFetching) {
-    return null;
-  }
+  const renderNavContainer = () => {
+    // Don't show navigation container to moderators
+    if (userInfo?.isModerator) {
+      return null;
+    }
 
-  return (
-    <div className={styles.headerContainer}>
-      <div className={styles.fixedHeader}>
-        <span className={styles.info}>
-          Squadhelp recognized as one of the Most Innovative Companies by Inc
-          Magazine.
-        </span>
-        <a href="http://www.google.com">Read Announcement</a>
-      </div>
-
-      <div className={styles.loginSignnUpHeaders}>
-        <div className={styles.numberContainer}>
-          <img src={`${CONSTANTS.STATIC_IMAGES_PATH}phone.png`} alt="phone" />
-          <span>(877)&nbsp;355-3585</span>
-        </div>
-        <div className={styles.userButtonsContainer}>
-          {renderLoginButtons()}
-        </div>
-      </div>
-
+    return (
       <div className={styles.navContainer}>
         <Link to="/">
           <img
@@ -377,15 +366,62 @@ const Header = () => {
             </ul>
           </div>
 
-          {data && data.role === CONSTANTS.CUSTOMER && (
+          {userInfo?.isCustomer && (
             <div className={styles.startContestBtn} onClick={startContests}>
               START CONTEST
             </div>
           )}
         </div>
       </div>
+    );
+  };
+
+  const renderHeaderForModerator = () => (
+    <div className={styles.headerContainer}>
+      <div className={styles.loginSignnUpHeaders}>
+          <img
+            src={`${CONSTANTS.STATIC_IMAGES_PATH}blue-logo.png`}
+            className={styles.logo}
+            alt="blue_logo"
+          />
+        <div className={styles.userButtonsContainer}>
+          {renderLoginButtons()}
+        </div>
+      </div>
     </div>
   );
+
+  const renderHeaderForNonModerator = () => (
+    <div className={styles.headerContainer}>
+      <div className={styles.fixedHeader}>
+        <span className={styles.info}>
+          Squadhelp recognized as one of the Most Innovative Companies by Inc
+          Magazine.
+        </span>
+        <a href="http://www.google.com">Read Announcement</a>
+      </div>
+
+      <div className={styles.loginSignnUpHeaders}>
+        <div className={styles.numberContainer}>
+          <img src={`${CONSTANTS.STATIC_IMAGES_PATH}phone.png`} alt="phone" />
+          <span>(877)&nbsp;355-3585</span>
+        </div>
+        <div className={styles.userButtonsContainer}>
+          {renderLoginButtons()}
+        </div>
+      </div>
+
+      {renderNavContainer()}
+    </div>
+  );
+
+  if (isFetching) {
+    return null;
+  }
+
+  return userInfo?.isModerator
+    ? renderHeaderForModerator()
+    : renderHeaderForNonModerator();
 };
 
 export default Header;

@@ -2,23 +2,23 @@
 @import '../../styles/mixins'
 
 .faqSection
-  scroll-margin-top: 50px
   max-width: 850px
+  scroll-margin-top: 50px
 
   h2
-    color: $primary-blue
     margin: 1.75rem 0
-    font-weight: 600
     font-size: 28px
+    font-weight: 600
+    color: $primary-blue
 
 .questionItem
   position: relative
-  width: 100%
-  border: 1px solid #d0daee50
-  border-radius: 1.1rem
-  margin: 1.75rem 0
   display: flex
   flex-direction: column
+  width: 100%
+  margin: 1.75rem 0
+  border: 1px solid #d0daee50
+  border-radius: 1.1rem
   overflow: hidden
   transition: all 0.5s ease
 
@@ -31,8 +31,8 @@
     color: #4e618d
 
   &:hover
-    border: 1px solid #3972ef
     background-color: #c9d7f663
+    border: 1px solid #3972ef
 
   &.open
     background-color: $primary-blue
@@ -55,8 +55,8 @@
   display: flex
   justify-content: space-between
   align-items: center
-  border-radius: 1.1rem
   padding: 1.25rem 1.5rem
+  border-radius: 1.1rem
   transition: all 0.7s ease
 
   &.open
@@ -66,9 +66,9 @@
 
 .answer
   margin-top: 10px
+  padding: 0 1.25rem 1.5rem
   color: #fff
   opacity: 1
-  padding: 0 1.25rem 1.5rem
   transition: all 0.9s ease
 
   &.open

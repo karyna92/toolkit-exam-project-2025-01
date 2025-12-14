@@ -9,12 +9,108 @@ import { goToExpandedDialog } from '../../store/slices/chatSlice';
 import {
   changeMark,
   clearChangeMarkError,
-  changeShowImage,
 } from '../../store/slices/contestByIdSlice';
 import CONSTANTS from '../../constants';
 import styles from './OfferBox.module.sass';
 import 'react-confirm-alert/src/react-confirm-alert.css';
-import './confirmStyle.css';
+
+const offerStatusCommands = {
+  resolve: {
+    title: 'Resolve Offer',
+    message: 'Are you sure you want to resolve this offer as winner?',
+    label: 'Yes, Resolve',
+  },
+  reject: {
+    title: 'Reject Offer',
+    message: 'Are you sure you want to reject this offer?',
+    label: 'Yes, Reject',
+  },
+  approve: {
+    title: 'Approve Offer',
+    message: 'Are you sure you want to approve this offer?',
+    label: 'Yes, Approve',
+  },
+  decline: {
+    title: 'Decline Offer',
+    message: 'Are you sure you want to decline this offer?',
+    label: 'Yes, Decline',
+  },
+};
+
+const getVisibleStatusesForRole = (role) => {
+  switch (role) {
+    case CONSTANTS.CUSTOMER:
+      return [
+        CONSTANTS.OFFER_STATUS_APPROVED,
+        CONSTANTS.OFFER_STATUS_WON,
+        CONSTANTS.OFFER_STATUS_REJECTED,
+      ];
+    case CONSTANTS.MODERATOR:
+      return [
+        CONSTANTS.OFFER_STATUS_PENDING,
+        CONSTANTS.OFFER_STATUS_APPROVED,
+        CONSTANTS.OFFER_STATUS_DECLINED,
+        CONSTANTS.OFFER_STATUS_WON,
+        CONSTANTS.OFFER_STATUS_REJECTED,
+      ];
+    case CONSTANTS.CREATOR:
+      return [
+        CONSTANTS.OFFER_STATUS_PENDING,
+        CONSTANTS.OFFER_STATUS_APPROVED,
+        CONSTANTS.OFFER_STATUS_DECLINED,
+        CONSTANTS.OFFER_STATUS_WON,
+        CONSTANTS.OFFER_STATUS_REJECTED,
+      ];
+    default:
+      return [];
+  }
+};
+
+const getStatusClass = (status) => {
+  switch (status) {
+    case CONSTANTS.OFFER_STATUS_APPROVED:
+      return styles.approved;
+    case CONSTANTS.OFFER_STATUS_DECLINED:
+      return styles.declined;
+    case CONSTANTS.OFFER_STATUS_PENDING:
+      return styles.pending;
+    case CONSTANTS.OFFER_STATUS_REJECTED:
+      return styles.reject;
+    case CONSTANTS.OFFER_STATUS_WON:
+      return styles.resolve;
+    default:
+      return '';
+  }
+};
+
+const getStatusIcon = (status) => {
+  switch (status) {
+    case CONSTANTS.OFFER_STATUS_REJECTED:
+    case CONSTANTS.OFFER_STATUS_DECLINED:
+      return 'fas fa-times-circle';
+    case CONSTANTS.OFFER_STATUS_WON:
+      return 'fas fa-check-circle';
+    default:
+      return null;
+  }
+};
+
+const getStatusText = (status) => {
+  switch (status) {
+    case CONSTANTS.OFFER_STATUS_APPROVED:
+      return 'approved';
+    case CONSTANTS.OFFER_STATUS_DECLINED:
+      return 'declined';
+    case CONSTANTS.OFFER_STATUS_PENDING:
+      return 'pending';
+    case CONSTANTS.OFFER_STATUS_REJECTED:
+      return 'rejected';
+    case CONSTANTS.OFFER_STATUS_WON:
+      return 'won';
+    default:
+      return status;
+  }
+};
 
 const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
   const dispatch = useDispatch();
@@ -26,9 +122,15 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     (state) => state.chatStore.messagesPreview
   );
 
+  const visibleStatuses = getVisibleStatusesForRole(role);
+  const isOfferVisible = visibleStatuses.includes(data.status);
+
+  if (!isOfferVisible) {
+    return null;
+  }
+
   const findConversationInfo = () => {
     const participants = [id, data.User.id].sort((a, b) => a - b);
-
     for (let i = 0; i < messagesPreview.length; i++) {
       if (isEqual(participants, messagesPreview[i].participants)) {
         return {
@@ -42,33 +144,27 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     return null;
   };
 
-  const resolveOffer = () => {
+  const confirmStatusChange = (command) => {
+    const cmd = offerStatusCommands[command];
+    if (!cmd) return;
+
     confirmAlert({
-      title: 'Confirm',
-      message: 'Are you sure?',
+      title: cmd.title,
+      message: cmd.message,
       buttons: [
         {
-          label: 'Yes',
-          onClick: () => setOfferStatus(data.User.id, data.id, 'resolve'),
+          label: cmd.label,
+          onClick: () => setOfferStatus(data.User.id, data.id, command),
         },
         { label: 'No' },
       ],
     });
   };
 
-  const rejectOffer = () => {
-    confirmAlert({
-      title: 'Confirm',
-      message: 'Are you sure?',
-      buttons: [
-        {
-          label: 'Yes',
-          onClick: () => setOfferStatus(data.User.id, data.id, 'reject'),
-        },
-        { label: 'No' },
-      ],
-    });
-  };
+  const resolveOffer = () => confirmStatusChange('resolve');
+  const rejectOffer = () => confirmStatusChange('reject');
+  const approveOffer = () => confirmStatusChange('approve');
+  const declineOffer = () => confirmStatusChange('decline');
 
   const changeUserMark = (value) => {
     dispatch(clearChangeMarkError());
@@ -82,7 +178,6 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     );
   };
 
-  // Нова функція для відкриття файлу
   const openLogoFile = () => {
     if (data.fileName) {
       const fileUrl = `${CONSTANTS.FILE_BASE_URL}/${data.fileName}`;
@@ -90,65 +185,38 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     }
   };
 
-  const offerStatus = () => {
+  const renderOfferStatus = () => {
     const { status } = data;
+    const statusClass = getStatusClass(status);
+    const statusIcon = getStatusIcon(status);
+    const statusText = getStatusText(status);
 
-    if (role === CONSTANTS.CREATOR) {
-      switch (status) {
-        case CONSTANTS.OFFER_STATUS_APPROVED:
-          return <span className={classNames(styles.approved)}>approved</span>;
-
-        case CONSTANTS.OFFER_STATUS_DECLINED:
-          return <span className={classNames(styles.declined)}>declined</span>;
-
-        case CONSTANTS.OFFER_STATUS_PENDING:
-          return <span className={classNames(styles.pending)}>pending</span>;
-        case CONSTANTS.OFFER_STATUS_REJECTED:
-          return (
-            <i
-              className={classNames(
-                'fas fa-times-circle reject',
-                styles.reject
-              )}
-            />
-          );
-
-        case CONSTANTS.OFFER_STATUS_WON:
-          return (
-            <i
-              className={classNames(
-                'fas fa-check-circle resolve',
-                styles.resolve
-              )}
-            />
-          );
-
-        default:
-          return null;
-      }
-    }
-
-    switch (status) {
-      case CONSTANTS.OFFER_STATUS_REJECTED:
-        return (
-          <i
-            className={classNames('fas fa-times-circle reject', styles.reject)}
-          />
-        );
-
-      case CONSTANTS.OFFER_STATUS_WON:
-        return (
-          <i
-            className={classNames(
-              'fas fa-check-circle resolve',
-              styles.resolve
-            )}
-          />
-        );
-
-      default:
+    if (role === CONSTANTS.CUSTOMER) {
+      if (
+        status === CONSTANTS.OFFER_STATUS_APPROVED ||
+        status === CONSTANTS.OFFER_STATUS_PENDING ||
+        status === CONSTANTS.OFFER_STATUS_DECLINED
+      ) {
         return null;
+      }
+
+      if (statusIcon) {
+        return (
+          <i
+            className={classNames(statusIcon, statusClass)}
+            title={statusText}
+          />
+        );
+      }
+      return null;
     }
+
+    if (statusIcon) {
+      return (
+        <i className={classNames(statusIcon, statusClass)} title={statusText} />
+      );
+    }
+    return <span className={classNames(statusClass)}>{statusText}</span>;
   };
 
   const goChat = () => {
@@ -166,11 +234,18 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
     navigate('/chat');
   };
 
+  const canRateOffer =
+    data.User.id !== id &&
+    role !== CONSTANTS.CUSTOMER &&
+    data.status !== CONSTANTS.OFFER_STATUS_PENDING &&
+    data.status !== CONSTANTS.OFFER_STATUS_DECLINED;
+
   const { avatar, firstName, lastName, email, rating } = data.User;
 
   return (
     <div className={styles.offerContainer}>
-      {offerStatus()}
+      {renderOfferStatus()}
+
       <div className={styles.mainInfoContainer}>
         <div className={styles.userInfo}>
           <div className={styles.creativeInfoContainer}>
@@ -180,13 +255,14 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
                   ? CONSTANTS.ANONYM_IMAGE_PATH
                   : `${CONSTANTS.FILE_BASE_URL}/${avatar}`
               }
-              alt="user"
+              alt={`${firstName} ${lastName}`}
             />
             <div className={styles.nameAndEmail}>
               <span>{`${firstName} ${lastName}`}</span>
               <span>{email}</span>
             </div>
           </div>
+
           <div className={styles.creativeRating}>
             <span className={styles.userScoreLabel}>Creative Rating </span>
             <Rating
@@ -213,7 +289,7 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
           {contestType === CONSTANTS.LOGO_CONTEST ? (
             <div className={styles.logoContainer}>
               <img
-                onClick={openLogoFile} // Змінено на нову функцію
+                onClick={openLogoFile}
                 className={styles.responseLogo}
                 src={`${CONSTANTS.FILE_BASE_URL}/${data.fileName}`}
                 alt="logo"
@@ -224,7 +300,7 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
             <span className={styles.response}>{data.text}</span>
           )}
 
-          {data.User.id !== id && (
+          {canRateOffer && (
             <Rating
               fractions={2}
               fullSymbol={
@@ -245,21 +321,34 @@ const OfferBox = ({ data, needButtons, setOfferStatus, contestType }) => {
           )}
         </div>
 
-        {role !== CONSTANTS.CREATOR && (
-          <i onClick={goChat} className="fas fa-comments" />
+        {role !== CONSTANTS.CREATOR && data.User.id !== id && (
+          <i onClick={goChat} className="fas fa-comments" title="Go to chat" />
         )}
       </div>
 
-      {needButtons(data.status) && (
-        <div className={styles.btnsContainer}>
-          <div onClick={resolveOffer} className={styles.resolveBtn}>
-            Resolve
+      {role === CONSTANTS.CUSTOMER &&
+        data.status === CONSTANTS.OFFER_STATUS_APPROVED && (
+          <div className={styles.btnsContainer}>
+            <div onClick={resolveOffer} className={styles.resolveBtn}>
+              Resolve
+            </div>
+            <div onClick={rejectOffer} className={styles.rejectBtn}>
+              Reject
+            </div>
           </div>
-          <div onClick={rejectOffer} className={styles.rejectBtn}>
-            Reject
+        )}
+
+      {role === CONSTANTS.MODERATOR &&
+        data.status === CONSTANTS.OFFER_STATUS_PENDING && (
+          <div className={styles.btnsContainer}>
+            <div onClick={approveOffer} className={styles.approveBtn}>
+              Approve
+            </div>
+            <div onClick={declineOffer} className={styles.declineBtn}>
+              Decline
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 };

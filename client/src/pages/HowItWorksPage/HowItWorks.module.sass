@@ -2,50 +2,49 @@
 @import '../../styles/mixins'
 
 html, body 
-  scroll-behavior: smooth  
+  scroll-behavior: smooth
 
 .howItWorks
   font-family: "Inter", sans-serif
-  color: $text-dark
   line-height: 1.6
+  color: $text-dark
 
 .subtitle
+  display: inline-block
   font-size: 12px
-  background: rgba(62, 169, 245, 0.1)
-  color: $primary-blue
   padding: 7px
   margin: 10px
   border-radius: 12px
+  background: rgba(62, 169, 245, 0.1)
+  color: $primary-blue
 
 .hero
-  background-color: $background-light
   @include flex-center
-  margin:0 auto
   @include container
+  margin: 0 auto
   gap: min(4rem, 2%)
+  background-color: $background-light
 
   h1
-    min-width: 300
-    max-width: 500px
-    font-size: 2.3rem
+    @include body-text-width
     margin-bottom: 1rem
+    font-size: 2.3rem
     font-weight: 600
 
   p
-    min-width: 300
-    max-width: 500px
+    @include body-text-width
     font-size: 1rem
     color: $text-gray
 
 .videoWrapper
+  position: relative
   min-width: 30rem
   max-width: 100%
-  position: relative
-  border-radius: 15px
-  padding-bottom: 17rem
   height: 0
-  overflow: hidden
+  padding-bottom: 17rem
   flex-shrink: 0
+  overflow: hidden
+  border-radius: 15px
 
 .videoIframe
   position: absolute
@@ -56,16 +55,16 @@ html, body
   border: 0
 
 .services
-  background: #9cc9c62f
   @include container
+  background: #9cc9c62f
 
 .sectionHeader
   margin-bottom: 3.5rem
   text-align: center
 
   h2
-    font-size: 1.9rem
     margin: 0.5rem
+    font-size: 1.9rem
     font-weight: 600
 
 .cards
@@ -75,16 +74,16 @@ html, body
   @include subContainer
 
 .steps
-  background-color: rgba(195, 179, 199, 0.129)
   @include container
+  background-color: rgba(195, 179, 199, 0.129)
 
 .stepsHeader
-  text-align: center
   margin-bottom: 3.5rem
+  text-align: center
 
   h2
-    font-size: 1.7rem
     margin: 0.5rem
+    font-size: 1.7rem
     font-weight: 600
 
 .cup
@@ -99,70 +98,72 @@ html, body
   text-align: center
 
 .faq
-  max-width: 900px
   display: flex
   flex-direction: column
   align-items: center
+  max-width: 900px
   @include subContainer
 
 .faqHeader
-  text-align: center
   width: 100%
+  text-align: center
 
   h2
-    font-size: 1.75rem
     margin-bottom: .5rem
+    font-size: 1.75rem
     font-weight: 600
 
 nav ul
-  width: 100%
-  background-color: #c0bfbf34
   display: flex
   flex-wrap: nowrap
+  width: 100%
   border: 1px solid #ddd
   border-radius: 15px
   margin-bottom: 2rem
+  background-color: #c0bfbf34
 
 .tabItem
-  align-self: center
   flex: 1 1 auto
-  list-style: none
+  align-self: center
   padding: 0.7rem 0.3rem
   border-radius: 15px
-  cursor: pointer
+  list-style: none
   font-size: 16px
+  color: inherit
+  background-color: transparent
   transition: color 0.3s ease, background-color 0.3s ease
+  cursor: pointer
 
   &:hover
     background: #f0f0f0
 
 .activeTab
-  color: #fff
-  background-color: $primary-orange
-  align-self: center
   flex: 1 1 auto
-  list-style: none
+  align-self: center
   padding: 0.7rem 0.3rem
   border-radius: 15px
-  cursor: pointer
+  list-style: none
   font-size: 16px
+  color: #fff
+  background-color: $primary-orange
+  cursor: pointer
 
 .faqSection
-  scroll-margin-top: 50px
   max-width: 850px
+  scroll-margin-top: 50px
 
   h2
-    color: $primary-blue
     margin: 1.75rem 0
+    color: $primary-blue
 
 .search
   display: flex
   flex-direction: column
   align-items: center
   gap: 1rem
-  border-bottom: 1px solid #c7c6c66d
   padding-bottom: 2rem
   margin-bottom: 2rem
+  border-bottom: 1px solid #c7c6c66d
   @include container
 
 .searchInput
@@ -170,29 +171,29 @@ nav ul
   display: flex
   align-items: center
   padding: 2.5px
-  border-radius: 30px
-  @include gradient-bg
   min-width: 300px
   width: 700px
+  border-radius: 30px
+  @include gradient-bg
 
   input
     width: 100%
-    border: none
-    outline: none
     padding: 22px 60px 22px 22px
+    border: none
     border-radius: 28px
+    outline: none
 
   button
     position: absolute
     right: 6px
     top: 50%
     transform: translateY(-50%)
-    border: none
-    background: $primary-orange
-    border-radius: 28px
     width: 65px
     height: 52px
     padding: 0
+    border: none
+    border-radius: 28px
+    background: $primary-orange
     cursor: pointer
 
     img
@@ -212,14 +213,15 @@ nav ul
     gap: 0.75rem
 
   li
-    font-size: 13px
     padding: 10px
     margin: 7px
-    border-radius: 19px
     border: 1px solid rgba(247, 247, 248, 0)
-    cursor: pointer
+    border-radius: 19px
+    font-size: 13px
     color: $dark-blue
     background-color: rgba(198, 201, 223, 0.443)
+    transition: background-color 0.2s ease, border-color 0.2s ease
+    cursor: pointer
 
     &:hover
       background-color: #fff
@@ -244,15 +246,15 @@ nav ul
   .hero
     flex-direction: column
     text-align: center
-  .hero
+
     h1
-      font-size: 1.5rem  
+      font-size: 1.5rem
 
   .videoWrapper
     width: 639px
     padding-bottom: 362px
-    order: -1
     margin-bottom: 38px
+    order: -1
 
   .searchInput
     width: 90%
@@ -269,9 +271,9 @@ nav ul
   .videoWrapper
     width: 92%
     padding-bottom: 50%
-    order: -1
     margin-bottom: 38px
- 
+    order: -1
+
 @media (max-width: $mobile)
   .howItWorks
     font-size: 14px

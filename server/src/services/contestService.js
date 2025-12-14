@@ -2,7 +2,7 @@ const db = require('../models');
 const contestQueries = require('../queries/contestQueries');
 const userQueries = require('../queries/userQueries');
 const CONSTANTS = require('../constants');
-const { BadRequestError, ServerError } = require('../errors'); 
+const { BadRequestError, ServerError } = require('../errors');
 
 module.exports.buildOfferObject = (req) => {
   const obj = {};
@@ -92,6 +92,17 @@ module.exports.resolveOffer = async (
       {
         contestId: contestId,
         id: { [db.Sequelize.Op.ne]: offerId },
+        status: CONSTANTS.OFFER_STATUS_APPROVED,
+      },
+      transaction
+    );
+
+    await contestQueries.updateOfferStatus(
+      { status: CONSTANTS.OFFER_STATUS_DECLINED },
+      {
+        contestId: contestId,
+        id: { [db.Sequelize.Op.ne]: offerId },
+        status: CONSTANTS.OFFER_STATUS_PENDING,
       },
       transaction
     );
@@ -116,7 +127,7 @@ module.exports.resolveOffer = async (
 
     return updatedOffers.find((o) => o.id === offerId)?.dataValues;
   } catch (error) {
-   if (error instanceof DatabaseError) {
+    if (error instanceof DatabaseError) {
       throw error;
     }
     throw new DatabaseError(`Failed to resolve offer: ${error.message}`);

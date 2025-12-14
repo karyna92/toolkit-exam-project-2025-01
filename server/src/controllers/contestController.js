@@ -226,6 +226,76 @@ module.exports.getCustomersContests = async (req, res, next) => {
     next(new ServerError('Failed to fetch customer contests'));
   }
 };
+// module.exports.getCustomersContests = async (req, res, next) => {
+//   try {
+//     const { status, limit = 5, offset = 0 } = req.query;
+
+//     if (!status) {
+//       return next(new BadRequestError('Status query param required'));
+//     }
+
+//     const parsedLimit = parseInt(limit);
+//     const parsedOffset = parseInt(offset);
+
+//     const whereClause = {
+//       status: status,
+//       userId: req.tokenData.userId,
+//     };
+
+//     const totalCount = await db.Contests.count({
+//       where: whereClause,
+//     });
+
+//     const contests = await db.Contests.findAll({
+//       where: whereClause,
+//       order: [['id', 'DESC']],
+//       limit: parsedLimit,
+//       offset: parsedOffset,
+//       include: [
+//         {
+//           model: db.Offers,
+//           required: false,
+//           attributes: ['id'],
+//           where: {
+  
+//             [db.Sequelize.Op.or]: [
+//               {
+//                 status: {
+//                   [db.Sequelize.Op.in]: [
+//                     CONSTANTS.OFFER_STATUS_APPROVED,
+//                     CONSTANTS.OFFER_STATUS_WON,
+//                     CONSTANTS.OFFER_STATUS_RESOLVED,
+//                   ],
+//                 },
+//               },
+//               // А також свої rejected офери
+//               {
+//                 status: CONSTANTS.OFFER_STATUS_REJECTED,
+//               },
+//             ],
+//           },
+//         },
+//       ],
+//     });
+
+//     contests.forEach(
+//       (contest) => (contest.dataValues.count = contest.dataValues.Offers.length)
+//     );
+
+//     const haveMore = parsedOffset + parsedLimit < totalCount;
+
+//     res.send({
+//       contests,
+//       haveMore,
+//       totalCount,
+//       currentPage: Math.floor(parsedOffset / parsedLimit) + 1,
+//       totalPages: Math.ceil(totalCount / parsedLimit),
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     next(new ServerError('Failed to fetch customer contests'));
+//   }
+// };
 
 module.exports.downloadFile = async (req, res, next) => {
   try {

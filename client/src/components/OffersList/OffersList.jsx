@@ -4,6 +4,59 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import CONSTANTS from '../../constants';
 import styles from './offersList.module.sass';
 
+const offerStatusCommands = {
+  approve: {
+    title: 'Approve Offer',
+    message: 'Are you sure you want to approve this offer?',
+    action: (handleSetOfferStatus, offerId, userId) =>
+      handleSetOfferStatus(offerId, userId, 'approve'),
+    confirmLabel: 'Yes, Approve',
+  },
+  decline: {
+    title: 'Decline Offer',
+    message: 'Are you sure you want to decline this offer?',
+    action: (handleSetOfferStatus, offerId, userId) =>
+      handleSetOfferStatus(offerId, userId, 'decline'),
+    confirmLabel: 'Yes, Decline',
+  },
+  reject: {
+    title: 'Reject Offer',
+    message: 'Are you sure you want to reject this offer?',
+    action: (handleSetOfferStatus, offerId, userId) =>
+      handleSetOfferStatus(offerId, userId, 'reject'),
+    confirmLabel: 'Yes, Reject',
+  },
+  resolve: {
+    title: 'Resolve Offer',
+    message: 'Are you sure you want to resolve this offer as winner?',
+    action: (handleSetOfferStatus, offerId, userId) =>
+      handleSetOfferStatus(offerId, userId, 'resolve'),
+    confirmLabel: 'Yes, Mark as Winner',
+  },
+};
+
+const confirmStatusChange = (
+  command,
+  offerId,
+  userId,
+  handleSetOfferStatus
+) => {
+  const cmd = offerStatusCommands[command];
+  if (!cmd) return;
+
+  confirmAlert({
+    title: cmd.title,
+    message: cmd.message,
+    buttons: [
+      {
+        label: cmd.confirmLabel,
+        onClick: () => cmd.action(handleSetOfferStatus, offerId, userId),
+      },
+      { label: 'Cancel' },
+    ],
+  });
+};
+
 const OffersList = ({
   contestsWithOffers,
   offers,
@@ -47,35 +100,11 @@ const OffersList = ({
   };
 
   const approveOffer = (offerId, userId) => {
-    confirmAlert({
-      title: 'Confirm',
-      message: 'Are you sure you want to approve this offer?',
-      buttons: [
-        {
-          label: 'Yes',
-          onClick: () => handleSetOfferStatus(offerId, userId, 'approve'),
-        },
-        {
-          label: 'No',
-        },
-      ],
-    });
+    confirmStatusChange('approve', offerId, userId, handleSetOfferStatus);
   };
 
   const declineOffer = (offerId, userId) => {
-    confirmAlert({
-      title: 'Confirm',
-      message: 'Are you sure you want to decline this offer?',
-      buttons: [
-        {
-          label: 'Yes',
-          onClick: () => handleSetOfferStatus(offerId, userId, 'decline'),
-        },
-        {
-          label: 'No',
-        },
-      ],
-    });
+    confirmStatusChange('decline', offerId, userId, handleSetOfferStatus);
   };
 
   if (contestsWithOffers.length === 0) {
@@ -135,7 +164,7 @@ const OffersList = ({
                 </div>
                 <div className={styles.tableCell}>
                   <span className={styles.count}>
-                    {contest.totalOffersCount || 0}
+                    {contestOffers.length || 0}
                   </span>
                 </div>
                 <div className={`${styles.combinedColumn} ${styles.tableCell}`}>
@@ -192,7 +221,8 @@ const OffersList = ({
                                   approveOffer(offer.id, offer.userId)
                                 }
                                 disabled={
-                                  offer.status !== 'pending' ||
+                                  offer.status !==
+                                    CONSTANTS.OFFER_STATUS_PENDING ||
                                   loadingOffers[offer.id]
                                 }
                               >
@@ -204,7 +234,8 @@ const OffersList = ({
                                   declineOffer(offer.id, offer.userId)
                                 }
                                 disabled={
-                                  offer.status !== 'pending' ||
+                                  offer.status !==
+                                    CONSTANTS.OFFER_STATUS_PENDING ||
                                   loadingOffers[offer.id]
                                 }
                               >

@@ -143,6 +143,51 @@ const CONSTANTS = {
       },
     ],
   },
+  tabsData: [
+    { name: 'Launching A Contest', refKey: 'launchingRef' },
+    { name: 'Buying From Marketplace', refKey: 'marketplaceRef' },
+    { name: 'Managed Contests', refKey: 'managedRef' },
+    { name: 'For Creatives', refKey: 'creativesRef' },
+  ],
+  servicesData: [
+    {
+      image: 'light.svg',
+      title: 'Launch a Contest',
+      description: 'Work with hundreds of creative experts...',
+      buttonText: 'Launch a Contest',
+      tabIndex: 0, // Посилання на вкладку в tabsData
+    },
+    {
+      image: 'tv.svg',
+      title: 'Explore Names For Sale',
+      description: 'Our branding team has curated thousands...',
+      buttonText: 'Explore Names For Sale',
+      tabIndex: 1,
+    },
+    {
+      image: 'lamp.svg',
+      title: 'Agency-level Managed Contests',
+      description: 'Our Managed contests combine the power...',
+      buttonText: 'Learn More',
+      tabIndex: 2,
+    },
+  ],
+  stepsData: [
+    'Fill out your Naming Brief and begin receiving name ideas in minutes',
+    'Rate the submissions and provide feedback to creatives...',
+    'Our team helps you test your favorite names with your target audience...',
+    'Pick a Winner. The winner gets paid for their submission.',
+  ],
+
+  categoryData: [
+    'Tech',
+    'Clothing',
+    'Finance',
+    'Real Estate',
+    'Crypto',
+    'Short',
+    'One Word',
+  ],
 };
 
 export default CONSTANTS;

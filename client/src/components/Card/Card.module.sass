@@ -2,12 +2,13 @@
 @import '../../styles/mixins'
 
 .card
-  max-height: 30rem
-  @include card-style
-  text-align: center
   display: flex
   flex-direction: column
   justify-content: space-between
+  max-height: 30rem
+  text-align: left
+
+  @include card-style
   box-shadow: 0 4px 12px rgba(0,0,0,0.1)
 
   h4
@@ -16,19 +17,25 @@
     font-weight: 600
 
   p
-    font-size: 1rem
     margin-bottom: 1.5rem
+    font-size: 1rem
     color: $text-light
 
   button
-    text-align: start
     height: 3rem
     margin: 2rem 0 0
+    text-align: start
     @include button-style
 
 .cardButtonArrow
   position: relative
   bottom: 3px
-  font-size: 30px
   line-height: 1
+  font-size: 30px
   transition: left 0.3s ease
+
+@media (max-width: 700px)
+  .card
+    text-align: center    
+    button
+      align-self: center
